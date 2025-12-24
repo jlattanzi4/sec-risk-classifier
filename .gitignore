@@ -6,12 +6,11 @@ data/processed/*.csv
 !data/processed/.gitkeep
 
 # Model files (too large)
-models/*.pkl
-models/*.pt
-models/*.bin
+models/
 *.pkl
 *.pt
 *.bin
+*.safetensors
 
 # Python
 __pycache__/
@@ -42,10 +41,14 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+.Rhistory
 
-# Outputs (regeneratable)
+# Outputs (regeneratable from source)
 outputs/*.png
 outputs/*.html
 
 # Keep structure
 !outputs/.gitkeep
+
+# Keep report.html for GitHub Pages
+!report.html

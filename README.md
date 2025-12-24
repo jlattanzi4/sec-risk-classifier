@@ -1,96 +1,123 @@
-# SEC 10-K Risk Factor Classifier
+# SEC 10-K Risk Factor Intelligence
 
-An NLP pipeline that classifies corporate risk disclosures from SEC 10-K filings into meaningful categories and identifies boilerplate vs. materially substantive risks.
+An end-to-end NLP pipeline analyzing 79,000+ corporate risk disclosures from SEC 10-K filings. This project demonstrates multi-class text classification, transformer fine-tuning, topic modeling, semantic similarity analysis, and model explainability.
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=flat&logo=pytorch&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-## Overview
+---
 
-Public companies are required to disclose risk factors in their annual 10-K filings (Item 1A). This project builds a multi-label text classification system that:
+## Interactive Report
 
-1. **Categorizes risks** into 10 domains (regulatory, cybersecurity, operational, etc.)
-2. **Detects boilerplate** language vs. material, company-specific disclosures
-3. **Tracks risk evolution** across 72,000+ filings from 2006-2020
+**[View the Full Interactive Analysis](https://jlattanzi4.github.io/sec-risk-classifier/report.html)**
+
+---
 
 ## Key Results
 
 | Metric | Value |
 |--------|-------|
-| Filings Analyzed | 72,613 |
-| Risk Paragraphs | 79,415 |
-| Classification Categories | 10 |
-| Date Range | 2006-2020 |
+| Risk Paragraphs Analyzed | 79,415 |
+| Unique Companies | 13,970 |
+| Classification F1 Score | **71.2%** |
+| Topics Discovered | 21 |
+| Semantic vs Lexical Gap | **2.4x** |
 
-*Model performance metrics will be added as phases complete.*
+### Headline Finding
 
-## Tech Stack
+Companies share **51% semantic similarity** but only **21% lexical overlap** in their risk disclosures. This 2.4x gap reveals that companies use different words to express similar risk concepts - a form of "paraphrased boilerplate" invisible to traditional text analysis.
 
-- **Data**: Hugging Face Datasets, Pandas, NumPy
-- **NLP**: NLTK, Scikit-learn, Transformers
-- **Deep Learning**: PyTorch, FinBERT
-- **Visualization**: Matplotlib, Seaborn, Plotly
-- **Deployment**: Streamlit
+---
+
+## NLP Techniques Demonstrated
+
+| Technique | Implementation | Purpose |
+|-----------|---------------|---------|
+| **Text Classification** | TF-IDF + Ensemble (LR, SVM, RF, XGBoost, LightGBM) | Categorize risks into 10 domains |
+| **Transformer Fine-tuning** | DistilBERT | Compare deep learning vs traditional ML |
+| **Topic Modeling** | BERTopic (UMAP + HDBSCAN) | Unsupervised discovery of risk themes |
+| **Sentence Embeddings** | SBERT (all-MiniLM-L6-v2) | Semantic similarity analysis |
+| **Model Explainability** | SHAP | Identify which words drive predictions |
+
+---
 
 ## Project Structure
 
 ```
+sec-risk-classifier/
 ├── data/
-│   ├── raw/              # Original EDGAR-CORPUS data
-│   └── processed/        # Cleaned datasets
-├── notebooks/
-│   ├── 01_data_acquisition_eda.ipynb
-│   ├── 02_preprocessing_segmentation.ipynb
-│   └── ...
+│   └── processed/           # Processed parquet files
 ├── src/
-│   └── preprocessing.py  # Reusable preprocessing module
-├── models/               # Trained model artifacts
-├── outputs/              # Visualizations and reports
-└── app/                  # Streamlit application (Phase 8)
+│   ├── preprocessing.py     # Data cleaning and segmentation
+│   ├── train_optimized.py   # TF-IDF ensemble classifier
+│   ├── train_distilbert.py  # Transformer comparison
+│   ├── topic_modeling.py    # BERTopic analysis
+│   ├── model_explainability.py  # SHAP analysis
+│   ├── boilerplate_detection.py # Semantic similarity
+│   └── generate_report.py   # Interactive HTML report
+├── models/                  # Trained model artifacts
+├── outputs/                 # Visualizations
+├── report.html              # Interactive analysis report
+└── README.md
 ```
 
-## Risk Categories
-
-| Category | Description |
-|----------|-------------|
-| Regulatory/Legal | Compliance, litigation, government action |
-| Cybersecurity | Data breaches, privacy, information security |
-| Competitive/Market | Competition, market share, pricing |
-| Macroeconomic | Recession, inflation, currency risks |
-| Operational/Supply | Supply chain, manufacturing, logistics |
-| Financial/Liquidity | Cash flow, debt, credit access |
-| Environmental/Climate | ESG, emissions, natural disasters |
-| Personnel/Labor | Key employees, workforce, unions |
-| Reputational | Brand, public perception, trust |
-| Technology/Innovation | R&D, obsolescence, digital disruption |
+---
 
 ## Methodology
 
-### Phase 1: Data Acquisition ✅
-- Loaded EDGAR-CORPUS dataset from Hugging Face
-- Filtered to 10-K filings with Item 1A sections (2006-2020)
-- Identified 200% growth in disclosure length over the period
+### 1. Data Acquisition and Preprocessing
+- Source: [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) from Hugging Face
+- Filtered to 10-K filings with Item 1A risk factor sections (2006-2020)
+- Segmented into 79,415 individual risk paragraphs
+- Memory-optimized processing with PyArrow for 1.6GB dataset
 
-### Phase 2: Preprocessing ✅
-- Text cleaning and normalization
-- Risk paragraph segmentation
-- Preliminary keyword-based classification
+### 2. Multi-Class Classification
+- **Best Model**: Soft Voting Ensemble achieving **71.2% F1 (macro)**
+- Compared 5 algorithms: Logistic Regression, SVM, Random Forest, XGBoost, LightGBM
+- Class balancing via strategic up/downsampling
+- TF-IDF vectorization with 10,000 features and bigrams
 
-### Phase 3-4: Classification (In Progress)
-- TF-IDF baseline with logistic regression
-- Word embedding approaches (Word2Vec, GloVe)
+### 3. Transformer Comparison
+- Fine-tuned DistilBERT achieved **57.8% F1**
+- Key insight: TF-IDF outperforms transformers on this task due to document length
+- SEC filings average 48K characters, exceeding transformer token limits (512)
 
-### Phase 5-6: Deep Learning (Planned)
-- Fine-tuned FinBERT for financial text
-- Multi-label classification architecture
+### 4. Topic Modeling
+- BERTopic discovered **21 distinct risk themes**
+- Industry-specific patterns emerged (Oil & Gas, Real Estate, Biotech)
+- Only 14% of topics align with manual categories, revealing hidden sub-themes
 
-### Phase 7: Boilerplate Detection (Planned)
-- Identify generic vs. material disclosures
-- Temporal analysis of risk language evolution
+### 5. Semantic Similarity Analysis
+- Compared TF-IDF (lexical) vs SBERT (semantic) similarity
+- Mean lexical similarity: 21.3%
+- Mean semantic similarity: 51.0%
+- Correlation: 0.31 (low) - capturing different dimensions
 
-### Phase 8: Deployment (Planned)
-- Interactive Streamlit dashboard
-- Real-time classification of new filings
+### 6. Model Explainability
+- SHAP analysis reveals which words drive each classification
+- Critical for regulated industries requiring interpretable decisions
+- Visualized feature importance across all 10 risk categories
+
+---
+
+## Risk Categories
+
+| Category | Example Risks |
+|----------|--------------|
+| Regulatory/Legal | Compliance, litigation, government action |
+| Cybersecurity | Data breaches, privacy, information security |
+| Competitive/Market | Competition, market share, pricing pressure |
+| Macroeconomic | Recession, inflation, currency fluctuations |
+| Operational/Supply | Supply chain disruption, manufacturing issues |
+| Financial/Liquidity | Cash flow constraints, debt obligations |
+| Environmental/Climate | ESG requirements, emissions, natural disasters |
+| Personnel/Labor | Key employee retention, workforce issues |
+| Reputational | Brand damage, public perception |
+| Technology/Innovation | R&D risks, technological obsolescence |
+
+---
 
 ## Installation
 
@@ -101,24 +128,84 @@ cd sec-risk-classifier
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
+### Dependencies
+
+```
+pandas>=2.0
+numpy<2
+scikit-learn>=1.3
+torch>=2.0
+transformers>=4.30
+sentence-transformers>=2.2
+bertopic>=0.15
+shap>=0.42
+plotly>=5.18
+pyarrow>=14.0
+matplotlib
+seaborn
+xgboost
+lightgbm
+```
+
+---
+
+## Usage
+
+```bash
+# Run the main classifier
+python src/train_optimized.py
+
+# Run topic modeling
+python src/topic_modeling.py
+
+# Run explainability analysis
+python src/model_explainability.py
+
+# Run boilerplate detection
+python src/boilerplate_detection.py
+
+# Generate interactive report
+python src/generate_report.py
+```
+
+---
+
 ## Data
 
-This project uses the [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) dataset from Hugging Face, which contains pre-parsed SEC filings from 1993-2020.
+This project uses the [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) dataset containing pre-parsed SEC filings from 1993-2020.
 
-**Note:** Due to size constraints, data files are not included in this repository. Run the data acquisition notebook to download and process the dataset.
+**Note:** Data files are not included due to size (1.6GB). The preprocessing pipeline can regenerate them from the source dataset.
+
+---
+
+## Key Visualizations
+
+The interactive report includes:
+- Model performance comparison across 7 algorithms
+- Risk category distribution analysis
+- Lexical vs semantic similarity comparison
+- Topic discovery and temporal trends
+- SHAP feature importance by category
+
+---
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+---
+
 ## Author
 
 **Joseph Lattanzi**
+Data Scientist
+
 - Portfolio: [jlattanzi4.github.io](https://jlattanzi4.github.io/)
 - GitHub: [@jlattanzi4](https://github.com/jlattanzi4)
+- LinkedIn: [Joseph Lattanzi](https://www.linkedin.com/in/jlattanzi4/)
