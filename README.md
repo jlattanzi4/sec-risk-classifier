@@ -2,6 +2,8 @@
 
 An end-to-end NLP pipeline analyzing 79,000+ corporate risk disclosures from SEC 10-K filings. This project demonstrates multi-class text classification, transformer fine-tuning, topic modeling, semantic similarity analysis, and model explainability.
 
+> **Under review (November 2026).** A review found that this project's headline numbers don't hold as first stated. The "51% semantic vs 21% lexical" gap compares scores computed on different amounts of text: the embedding model reads only about the first 1,400 characters of each section, while TF-IDF reads up to 50,000. The 71.2% F1 comes from an evaluation where upsampled copies of test rows were also in the training set. And the "paragraphs" are mostly whole risk sections, because segmentation didn't split them. A sentence-level rework is tracked in [#1](https://github.com/jlattanzi4/sec-risk-classifier/issues/1). The pipeline and figures below are the original version, kept for reference.
+
 ![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=flat&logo=scikit-learn&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=flat&logo=pytorch&logoColor=white)
@@ -15,19 +17,14 @@ An end-to-end NLP pipeline analyzing 79,000+ corporate risk disclosures from SEC
 
 ---
 
-## Key Results
+## At a Glance
 
-| Metric | Value |
+| | |
 |--------|-------|
-| Risk Paragraphs Analyzed | 79,415 |
-| Unique Companies | 13,970 |
-| Classification F1 Score | **71.2%** |
-| Topics Discovered | 21 |
-| Semantic vs Lexical Gap | **2.4x** |
-
-### Headline Finding
-
-Companies share **51% semantic similarity** but only **21% lexical overlap** in their risk disclosures. This 2.4x gap reveals that companies use different words to express similar risk concepts - a form of "paraphrased boilerplate" invisible to traditional text analysis.
+| Risk disclosures analyzed | 79,415 |
+| Unique companies | 13,970 |
+| Filing years | 2006–2020 |
+| Topics discovered | 21 |
 
 ---
 
@@ -59,7 +56,7 @@ sec-risk-classifier/
 │   └── generate_report.py   # Interactive HTML report
 ├── models/                  # Trained model artifacts
 ├── outputs/                 # Visualizations
-├── report.html              # Interactive analysis report
+├── docs/report.html         # Interactive analysis report (served by GitHub Pages)
 └── README.md
 ```
 
@@ -70,18 +67,18 @@ sec-risk-classifier/
 ### 1. Data Acquisition and Preprocessing
 - Source: [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) from Hugging Face
 - Filtered to 10-K filings with Item 1A risk factor sections (2006-2020)
-- Segmented into 79,415 individual risk paragraphs
+- 79,415 risk disclosures (segmentation was meant to split paragraphs but mostly kept whole sections; see the note above)
 - Memory-optimized processing with PyArrow for 1.6GB dataset
 
 ### 2. Multi-Class Classification
-- **Best Model**: Soft Voting Ensemble achieving **71.2% F1 (macro)**
+- Soft Voting Ensemble scored 71.2% F1 (macro) on a leaky evaluation (see the note above)
 - Compared 5 algorithms: Logistic Regression, SVM, Random Forest, XGBoost, LightGBM
 - Class balancing via strategic up/downsampling
 - TF-IDF vectorization with 10,000 features and bigrams
 
 ### 3. Transformer Comparison
 - Fine-tuned DistilBERT achieved **57.8% F1**
-- Key insight: TF-IDF outperforms transformers on this task due to document length
+- TF-IDF scored higher, but its number comes from the leaky evaluation above, so the comparison doesn't hold
 - SEC filings average 48K characters, exceeding transformer token limits (512)
 
 ### 4. Topic Modeling
@@ -93,7 +90,7 @@ sec-risk-classifier/
 - Compared TF-IDF (lexical) vs SBERT (semantic) similarity
 - Mean lexical similarity: 21.3%
 - Mean semantic similarity: 51.0%
-- Correlation: 0.31 (low) - capturing different dimensions
+- The two means aren't comparable: SBERT reads about the first 1,400 characters of each section (a 256-token limit), TF-IDF up to 50,000 with rare words weighted up. Shuffling the words, which destroys their meaning, raises the SBERT mean to 57.9%.
 
 ### 6. Model Explainability
 - SHAP analysis reveals which words drive each classification
