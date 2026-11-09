@@ -1,1051 +1,116 @@
 """
-Generate Interactive HTML Report
-SEC 10-K Risk Factor Intelligence
+Build the project report, docs/report.html, from the processed filings.
 
-Creates a beautiful, self-contained HTML report with:
-- Interactive Plotly visualizations
-- Key findings and insights
-- Methodology explanation
-- Business value narrative
+Every number on the page is computed here from the data (or read from a saved
+model result) and filled into src/report_template.html, so the page can't
+drift from the data. Run from the repo root:
+
+    python src/generate_report.py
 """
 
 import json
+import re
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pyarrow.parquet as pq
 
-# Paths
 PROJECT_ROOT = Path(__file__).parent.parent
-DATA_DIR = PROJECT_ROOT / 'data' / 'processed'
-OUTPUTS_DIR = PROJECT_ROOT / 'outputs'
+FILINGS = PROJECT_ROOT / "data" / "processed" / "risk_factors_2006_2020.parquet"
+MODEL_RESULTS = PROJECT_ROOT / "models" / "model_comparison_optimized.csv"
+TEMPLATE = PROJECT_ROOT / "src" / "report_template.html"
+OUTPUT = PROJECT_ROOT / "docs" / "report.html"
+
+# all-MiniLM-L6-v2 truncates at 256 tokens: about the first 1,370 characters
+# of these sections (measured in the 2026 review, see issue #1).
+SBERT_CHARS = 1_400
+# boilerplate_detection.py cut each company's text to 50,000 characters for TF-IDF.
+TFIDF_CAP = 50_000
+# A dense 10-K page holds roughly 3,000 characters; used only to draw Figure 1.
+CHARS_PER_PAGE = 3_000
 
 
-def load_analysis_results():
-    """Load results from previous analyses."""
-    results = {}
-
-    # Load SHAP feature importance
-    shap_path = OUTPUTS_DIR / 'shap_feature_importance.csv'
-    if shap_path.exists():
-        results['shap'] = pd.read_csv(shap_path)
-
-    # Load basic data stats
-    filepath = DATA_DIR / 'risk_paragraphs.parquet'
-    if filepath.exists():
-        table = pq.read_table(filepath, columns=['cik', 'filing_year', 'primary_category'])
-        df = table.to_pandas()
-        results['total_paragraphs'] = len(df)
-        results['total_companies'] = df['cik'].nunique()
-        results['year_range'] = (df['filing_year'].min(), df['filing_year'].max())
-        results['category_counts'] = df['primary_category'].value_counts().to_dict()
-        results['yearly_counts'] = df.groupby('filing_year').size().to_dict()
-
-    return results
-
-
-def create_hero_metrics(results):
-    """Create hero metrics section."""
-    return f"""
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-value">{results.get('total_paragraphs', 79415):,}</div>
-            <div class="metric-label">Risk Disclosures Analyzed</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">{results.get('total_companies', 13970):,}</div>
-            <div class="metric-label">Unique Companies</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">15</div>
-            <div class="metric-label">Years of SEC Filings</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">21</div>
-            <div class="metric-label">Risk Topics Discovered</div>
-        </div>
-    </div>
-    """
-
-
-def create_category_chart(results):
-    """Create interactive category distribution chart."""
-    if 'category_counts' not in results:
-        return ""
-
-    cats = results['category_counts']
-    # Remove 'other' if present
-    cats = {k: v for k, v in cats.items() if k != 'other'}
-
-    df = pd.DataFrame({
-        'Category': list(cats.keys()),
-        'Count': list(cats.values())
-    }).sort_values('Count', ascending=True)
-
-    # Clean category names
-    df['Category'] = df['Category'].str.replace('_', ' ').str.title()
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=df['Count'],
-        y=df['Category'],
-        orientation='h',
-        marker_color='#3B82F6',
-        text=df['Count'].apply(lambda x: f'{x:,}'),
-        textposition='outside',
-        textfont=dict(size=11, color='#F8FAFC'),
-        hovertemplate='<b>%{y}</b><br>Count: %{x:,}<extra></extra>'
-    ))
-
-    fig.update_layout(
-        title=None,
-        xaxis_title="Number of Risk Paragraphs",
-        yaxis_title="Risk Category",
-        showlegend=False,
-        height=420,
-        margin=dict(l=20, r=80, t=20, b=50),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color='#F8FAFC'),
-        xaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.2)',
-            gridwidth=1
-        ),
-        yaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.1)'
-        )
+def yearly_lengths(filings: pd.DataFrame) -> pd.DataFrame:
+    by_year = filings.groupby("filing_year")["item_1a_length"]
+    table = pd.DataFrame(
+        {
+            "count": by_year.size(),
+            "median": by_year.median(),
+            "p25": by_year.quantile(0.25),
+            "p75": by_year.quantile(0.75),
+        }
+    )
+    return (
+        table.round().astype(int).reset_index().rename(columns={"filing_year": "year"})
     )
 
-    return fig.to_html(full_html=False, include_plotlyjs=False)
+
+def best_f1() -> str:
+    results = pd.read_csv(MODEL_RESULTS)
+    return f"{results.loc[results['is_best'], 'f1_macro'].iloc[0]:.1%}"
 
 
-def create_yearly_trend_chart(results):
-    """Create yearly filing trend chart."""
-    if 'yearly_counts' not in results:
-        return ""
+def build() -> str:
+    filings = pq.read_table(
+        FILINGS, columns=["cik", "filing_year", "item_1a_length"]
+    ).to_pandas()
+    years = yearly_lengths(filings)
+    first, last = years.iloc[0], years.iloc[-1]
+    median_all = int(filings["item_1a_length"].median())
 
-    years = sorted(results['yearly_counts'].keys())
-    counts = [results['yearly_counts'][y] for y in years]
+    def page_row(r):
+        return {
+            "year": int(r["year"]),
+            "chars": int(r["median"]),
+            "pages": r["median"] / CHARS_PER_PAGE,
+        }
 
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=years,
-        y=counts,
-        mode='lines+markers+text',
-        fill='tozeroy',
-        fillcolor='rgba(59, 130, 246, 0.1)',
-        line=dict(color='#3B82F6', width=3),
-        marker=dict(size=8, color='#3B82F6'),
-        text=[f'{c:,}' for c in counts],
-        textposition='top center',
-        textfont=dict(size=9, color='#94A3B8'),
-        hovertemplate='<b>Year: %{x}</b><br>Paragraphs: %{y:,}<extra></extra>'
-    ))
-
-    fig.update_layout(
-        title=None,
-        xaxis_title="Filing Year",
-        yaxis_title="Number of Risk Paragraphs",
-        height=420,
-        margin=dict(l=20, r=20, t=40, b=50),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color='#F8FAFC'),
-        xaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.2)',
-            dtick=2
-        ),
-        yaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.2)'
-        )
+    data = {
+        "years": years.to_dict(orient="records"),
+        "pageRows": [page_row(first), page_row(last)],
+        "charsPerPage": CHARS_PER_PAGE,
+        "sbertChars": SBERT_CHARS,
+        "tfidfCap": TFIDF_CAP,
+    }
+    rows = "\n".join(
+        f'        <tr><td>{r.year}</td><td class="num">{r.count:,}</td><td class="num">{r.median:,}</td>'
+        f'<td class="num">{r.p25:,}</td><td class="num">{r.p75:,}</td></tr>'
+        for r in years.itertuples()
     )
-
-    return fig.to_html(full_html=False, include_plotlyjs=False)
-
-
-def create_model_comparison_chart():
-    """Create model performance comparison chart."""
-    models = ['Logistic Regression', 'SVM', 'Random Forest', 'XGBoost', 'LightGBM', 'Ensemble', 'DistilBERT']
-    f1_scores = [0.68, 0.67, 0.65, 0.69, 0.70, 0.712, 0.578]
-    colors = ['#64748B', '#64748B', '#64748B', '#64748B', '#64748B', '#10B981', '#EF4444']
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=models,
-        y=f1_scores,
-        marker_color=colors,
-        text=[f'{s:.1%}' for s in f1_scores],
-        textposition='outside',
-        textfont=dict(size=12, color='#F8FAFC'),
-        hovertemplate='<b>%{x}</b><br>F1 Score: %{y:.1%}<extra></extra>'
-    ))
-
-    fig.add_hline(y=0.712, line_dash="dash", line_color="#10B981",
-                  annotation_text="Best: 71.2%", annotation_position="right",
-                  annotation_font=dict(color='#10B981', size=11))
-
-    fig.update_layout(
-        title=None,
-        xaxis_title="Model",
-        yaxis_title="F1 Score (Macro)",
-        yaxis_range=[0, 0.85],
-        height=450,
-        margin=dict(l=20, r=20, t=40, b=80),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color='#F8FAFC'),
-        xaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            tickangle=-45
-        ),
-        yaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.2)',
-            tickformat='.0%'
-        )
-    )
-
-    return fig.to_html(full_html=False, include_plotlyjs=False)
-
-
-def create_topic_chart():
-    """Create topic modeling results chart."""
-    topics = [
-        ('General Risk Factors', 658),
-        ('Stock & Investment', 406),
-        ('Economic Conditions', 299),
-        ('Forward-Looking Statements', 229),
-        ('Clinical/Biotech', 221),
-        ('Financial Losses', 193),
-        ('Competition', 177),
-        ('Real Estate/Loans', 176),
-        ('Oil & Gas', 140),
-        ('Trust/Shares', 120)
-    ]
-
-    names = [t[0] for t in topics]
-    counts = [t[1] for t in topics]
-
-    # Create horizontal bar chart instead of treemap for better labeling
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=counts,
-        y=names,
-        orientation='h',
-        marker=dict(
-            color=counts,
-            colorscale='Viridis',
-            showscale=False
-        ),
-        text=[f'{c:,} docs' for c in counts],
-        textposition='outside',
-        textfont=dict(size=11, color='#F8FAFC'),
-        hovertemplate='<b>%{y}</b><br>Documents: %{x:,}<extra></extra>'
-    ))
-
-    fig.update_layout(
-        title=None,
-        xaxis_title="Number of Documents",
-        yaxis_title="Discovered Topic",
-        height=450,
-        margin=dict(l=20, r=100, t=20, b=50),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color='#F8FAFC'),
-        xaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.2)'
-        ),
-        yaxis=dict(
-            title_font=dict(size=13, color='#94A3B8'),
-            tickfont=dict(size=11, color='#94A3B8'),
-            gridcolor='rgba(128,128,128,0.1)'
-        )
-    )
-
-    return fig.to_html(full_html=False, include_plotlyjs=False)
-
-
-def create_shap_chart(results):
-    """Create SHAP feature importance chart."""
-    if 'shap' not in results:
-        return ""
-
-    shap_df = results['shap']
-
-    # Get top 5 features per category (top 6 categories)
-    top_cats = shap_df.groupby('class')['importance'].sum().nlargest(6).index.tolist()
-
-    fig = make_subplots(
-        rows=2, cols=3,
-        subplot_titles=[c.replace('_', ' ').title() for c in top_cats],
-        vertical_spacing=0.15,
-        horizontal_spacing=0.12
-    )
-
-    colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
-
-    for idx, cat in enumerate(top_cats):
-        row = idx // 3 + 1
-        col = idx % 3 + 1
-
-        cat_data = shap_df[shap_df['class'] == cat].nsmallest(5, 'rank')
-
-        fig.add_trace(
-            go.Bar(
-                x=cat_data['importance'],
-                y=cat_data['feature'],
-                orientation='h',
-                marker_color=colors[idx],
-                showlegend=False,
-                text=[f'{v:.3f}' for v in cat_data['importance']],
-                textposition='outside',
-                textfont=dict(size=9, color='#94A3B8'),
-                hovertemplate='<b>%{y}</b><br>SHAP Value: %{x:.4f}<extra></extra>'
-            ),
-            row=row, col=col
-        )
-
-    fig.update_layout(
-        height=550,
-        margin=dict(l=20, r=60, t=80, b=40),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=10, color='#F8FAFC')
-    )
-
-    fig.update_xaxes(
-        gridcolor='rgba(128,128,128,0.2)',
-        title_text="SHAP Value",
-        title_font=dict(size=10, color='#94A3B8'),
-        tickfont=dict(size=9, color='#94A3B8')
-    )
-    fig.update_yaxes(
-        gridcolor='rgba(128,128,128,0.1)',
-        tickfont=dict(size=9, color='#94A3B8')
-    )
-
-    # Update subplot titles
-    fig.update_annotations(font=dict(size=12, color='#F8FAFC'))
-
-    return fig.to_html(full_html=False, include_plotlyjs=False)
-
-
-def generate_html_report(results):
-    """Generate the complete HTML report."""
-
-    html_template = f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEC Risk Factor Intelligence | NLP Analysis</title>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {{
-            --bg-primary: #0F172A;
-            --bg-secondary: #1E293B;
-            --bg-card: #334155;
-            --text-primary: #F8FAFC;
-            --text-secondary: #94A3B8;
-            --accent-blue: #3B82F6;
-            --accent-green: #10B981;
-            --accent-purple: #8B5CF6;
-            --accent-orange: #F59E0B;
-            --gradient-1: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            --gradient-2: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
-        }}
-
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-
-        body {{
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }}
-
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }}
-
-        /* Hero Section */
-        .hero {{
-            padding: 80px 0 60px;
-            text-align: center;
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-        }}
-
-        .hero-badge {{
-            display: inline-block;
-            padding: 8px 16px;
-            background: var(--gradient-1);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 24px;
-        }}
-
-        .hero h1 {{
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }}
-
-        .hero-subtitle {{
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }}
-
-        /* Metrics Grid */
-        .metrics-grid {{
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin: 40px 0;
-        }}
-
-        .metric-card {{
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 32px 24px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }}
-
-        .metric-card:hover {{
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }}
-
-        .metric-value {{
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }}
-
-        .metric-label {{
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }}
-
-        /* Sections */
-        section {{
-            padding: 80px 0;
-        }}
-
-        .section-header {{
-            text-align: center;
-            margin-bottom: 48px;
-        }}
-
-        .section-badge {{
-            display: inline-block;
-            padding: 6px 12px;
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-blue);
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-        }}
-
-        .section-header h2 {{
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }}
-
-        .section-header p {{
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto;
-        }}
-
-        /* Cards */
-        .card {{
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 32px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }}
-
-        .card-header {{
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }}
-
-        .card-icon {{
-            width: 48px;
-            height: 48px;
-            background: var(--gradient-1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }}
-
-        .card-title {{
-            font-size: 1.5rem;
-            font-weight: 600;
-        }}
-
-        .card-subtitle {{
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }}
-
-        /* Grid layouts */
-        .grid-2 {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 32px;
-        }}
-
-        /* Insight boxes */
-        .insight-box {{
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-            border-left: 4px solid var(--accent-blue);
-            padding: 24px;
-            border-radius: 0 12px 12px 0;
-            margin: 24px 0;
-        }}
-
-        .insight-box.green {{
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-            border-left-color: var(--accent-green);
-        }}
-
-        .insight-box a {{
-            color: var(--accent-blue);
-            text-decoration: underline;
-        }}
-
-        .insight-title {{
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-
-        /* Methodology */
-        .method-grid {{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }}
-
-        .method-card {{
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 28px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }}
-
-        .method-icon {{
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-        }}
-
-        .method-title {{
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }}
-
-        .method-desc {{
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }}
-
-        /* Skills */
-        .skills-grid {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-top: 32px;
-        }}
-
-        .skill-item {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            background: var(--bg-card);
-            border-radius: 12px;
-        }}
-
-        .skill-bullet {{
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            flex-shrink: 0;
-        }}
-
-        /* Footer */
-        footer {{
-            padding: 48px 0;
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }}
-
-        footer p {{
-            color: var(--text-secondary);
-        }}
-
-        footer a {{
-            color: var(--accent-blue);
-            text-decoration: none;
-        }}
-
-        /* Responsive */
-        @media (max-width: 768px) {{
-            .metrics-grid {{
-                grid-template-columns: repeat(2, 1fr);
-            }}
-            .grid-2, .method-grid {{
-                grid-template-columns: 1fr;
-            }}
-            .hero h1 {{
-                font-size: 2.5rem;
-            }}
-        }}
-
-        /* Chart containers */
-        .chart-container {{
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 24px 0;
-        }}
-
-        .chart-title {{
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <!-- Hero Section -->
-    <header class="hero">
-        <div class="container">
-            <div class="hero-badge">NLP Portfolio Project</div>
-            <h1>SEC Risk Factor Intelligence</h1>
-            <p class="hero-subtitle">
-                Deep learning and NLP analysis of 79,000+ risk disclosures from SEC 10-K filings,
-                revealing patterns in corporate risk communication.
-            </p>
-            {create_hero_metrics(results)}
-            <div class="insight-box" style="margin-top: 40px; text-align: left;">
-                <div class="insight-title">Under review (November 2026)</div>
-                <p>
-                    A review found that this analysis's headline numbers don't hold as first stated.
-                    The semantic and lexical similarity scores were computed on different amounts of text,
-                    so they can't be compared. The classifier's F1 scores come from an evaluation where
-                    upsampled copies of test rows were also in the training set. And most "paragraphs" are
-                    whole risk sections, because segmentation didn't split them. A sentence-level rework is
-                    tracked in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.
-                    The rest of this page is the original analysis, kept for reference.
-                </p>
-            </div>
-        </div>
-    </header>
-
-
-    <!-- Executive Summary -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Executive Summary</div>
-                <h2>What This Analysis Reveals</h2>
-                <p>Combining traditional ML with modern NLP to understand how companies communicate risk</p>
-            </div>
-
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">01</div>
-                        <div>
-                            <div class="card-title">The Challenge</div>
-                            <div class="card-subtitle">Understanding SEC Risk Disclosures</div>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary);">
-                        SEC 10-K filings contain critical risk information, but manually analyzing
-                        thousands of disclosures is impractical. This project automates the
-                        classification and analysis of risk factors, enabling scalable insights
-                        into corporate risk communication patterns.
-                    </p>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">02</div>
-                        <div>
-                            <div class="card-title">The Open Question</div>
-                            <div class="card-subtitle">How Much Is Boilerplate?</div>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary);">
-                        How much of what companies say about risk is copied, from peers or from their
-                        own earlier filings? This first version compared two similarity scores, but they
-                        measure different amounts of text, so the comparison doesn't answer it. The
-                        rework measures copying directly, sentence by sentence.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Data Overview -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Data</div>
-                <h2>Dataset Overview</h2>
-                <p>15 years of SEC 10-K filings from publicly traded companies</p>
-            </div>
-
-            <div class="grid-2">
-                <div class="chart-container">
-                    <div class="chart-title">Risk Categories Distribution</div>
-                    {create_category_chart(results)}
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Filings Over Time</div>
-                    {create_yearly_trend_chart(results)}
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Classification Results -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Classification</div>
-                <h2>Multi-Class Risk Classification</h2>
-                <p>Comparing traditional ML models with transformer-based approaches</p>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">Model Performance Comparison (F1 Score)</div>
-                {create_model_comparison_chart()}
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Read With Caution
-                </div>
-                <p>
-                    These F1 scores overstate real performance. Minority classes were upsampled before the
-                    train/test split, so copies of test rows were also in training; most test rows share a
-                    company with training rows; and the ensemble was chosen on test F1. The labels come from
-                    keyword rules. So the ensemble's lead over DistilBERT (71.2% vs 57.8%) doesn't hold.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Explainability -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Explainability</div>
-                <h2>What Drives Each Classification?</h2>
-                <p>SHAP analysis reveals which words matter most for each risk category</p>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">Top Features by Risk Category (SHAP Values)</div>
-                {create_shap_chart(results)}
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Why Explainability Matters
-                </div>
-                <p>
-                    In regulated industries like finance, model decisions must be interpretable.
-                    SHAP values provide legally defensible explanations for each classification,
-                    showing exactly which words influenced the model's decision.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Semantic Analysis -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Semantic Analysis</div>
-                <h2>Two Similarity Scores</h2>
-                <p>What each one actually measured</p>
-            </div>
-
-            <div class="grid-2" style="margin-top: 32px;">
-                <div class="card" style="border-left: 4px solid var(--accent-blue);">
-                    <h3 style="margin-bottom: 16px;">TF-IDF (Lexical)</h3>
-                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-blue);">21.3%</div>
-                    <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Mean TF-IDF cosine between companies, over up to 50,000 characters of each
-                        section, with rare words weighted up.
-                    </p>
-                </div>
-                <div class="card" style="border-left: 4px solid var(--accent-orange);">
-                    <h3 style="margin-bottom: 16px;">SBERT (Semantic)</h3>
-                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-orange);">51.0%</div>
-                    <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Mean SBERT cosine between companies, over only about the first 1,400 characters
-                        of each section (the model's 256-token limit).
-                    </p>
-                </div>
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Why These Can't Be Compared
-                </div>
-                <p>
-                    The two scores read different amounts of text on different scales, so the gap between
-                    them doesn't show that companies say the same things in different words. A check
-                    confirms it: shuffling each section's words, which destroys their meaning, raises the
-                    SBERT mean from 51.0% to 57.9%. The rework measures copying directly instead.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Topic Modeling -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Unsupervised Discovery</div>
-                <h2>Topics Discovered by BERTopic</h2>
-                <p>21 distinct risk themes automatically identified from the corpus</p>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">Discovered Topic Distribution</div>
-                {create_topic_chart()}
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Unsupervised Insights
-                </div>
-                <p>
-                    BERTopic discovered <strong>industry-specific risk patterns</strong> (Oil & Gas, Real Estate,
-                    Biotech) that the manual taxonomy doesn't capture. Only 14% of discovered topics
-                    align strongly with predefined categories, revealing new dimensions of risk disclosure.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Methodology -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Methodology</div>
-                <h2>Technical Approach</h2>
-                <p>A comprehensive NLP pipeline combining multiple techniques</p>
-            </div>
-
-            <div class="method-grid">
-                <div class="method-card">
-                    <div class="method-icon">1</div>
-                    <div class="method-title">Text Classification</div>
-                    <div class="method-desc">
-                        TF-IDF vectorization with ensemble of Logistic Regression, SVM,
-                        Random Forest, XGBoost, and LightGBM
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">2</div>
-                    <div class="method-title">Transformers</div>
-                    <div class="method-desc">
-                        Fine-tuned DistilBERT for comparison, demonstrating when
-                        traditional ML outperforms deep learning
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">3</div>
-                    <div class="method-title">Sentence Embeddings</div>
-                    <div class="method-desc">
-                        SBERT (all-MiniLM-L6-v2) for semantic similarity analysis
-                        and boilerplate detection
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">4</div>
-                    <div class="method-title">Topic Modeling</div>
-                    <div class="method-desc">
-                        BERTopic for unsupervised discovery of latent themes
-                        using UMAP + HDBSCAN clustering
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">5</div>
-                    <div class="method-title">Explainability</div>
-                    <div class="method-desc">
-                        SHAP (SHapley Additive exPlanations) for interpretable
-                        feature importance analysis
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">6</div>
-                    <div class="method-title">Visualization</div>
-                    <div class="method-desc">
-                        Interactive Plotly dashboards and comprehensive
-                        matplotlib visualizations
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Skills Demonstrated -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Skills</div>
-                <h2>NLP Competencies Demonstrated</h2>
-            </div>
-
-            <div class="skills-grid">
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Multi-class text classification at scale</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Transformer fine-tuning (DistilBERT)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Sentence embeddings (SBERT)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Unsupervised topic modeling (BERTopic)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Model explainability (SHAP)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Ensemble methods and hyperparameter tuning</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Memory-efficient data processing (PyArrow)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Interactive data visualization (Plotly)</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p style="font-size: 1.25rem; margin-bottom: 16px;">
-                <strong>SEC Risk Factor Intelligence</strong>
-            </p>
-            <p>
-                Built with Python, scikit-learn, Transformers, BERTopic, SHAP, and Plotly<br>
-                <a href="https://github.com/jlattanzi4" target="_blank">View on GitHub</a>
-            </p>
-            <p style="margin-top: 24px; font-size: 0.875rem;">
-                Generated {datetime.now().strftime("%B %d, %Y")}
-            </p>
-        </div>
-    </footer>
-</body>
-</html>
-'''
-
-    return html_template
-
-
-def main():
-    """Generate the interactive HTML report."""
-    print("=" * 60)
-    print("GENERATING INTERACTIVE HTML REPORT")
-    print("=" * 60)
-
-    # Load results
-    print("\nLoading analysis results...")
-    results = load_analysis_results()
-
-    # Generate report
-    print("Generating HTML report...")
-    html_content = generate_html_report(results)
-
-    # Save report
-    output_path = PROJECT_ROOT / 'docs' / 'report.html'
-    output_path.parent.mkdir(exist_ok=True)
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html_content)
-
-    print(f"\nReport saved to: {output_path}")
-    print("\nOpen in browser to view the interactive report.")
-    print("This file can be hosted on GitHub Pages or your personal website.")
-
-
-if __name__ == '__main__':
+    fields = {
+        "filings": f"{len(filings):,}",
+        "companies": f"{filings['cik'].nunique():,}",
+        "year_min": str(first["year"]),
+        "year_max": str(last["year"]),
+        "median_y0": f"{first['median']:,}",
+        "median_y1": f"{last['median']:,}",
+        "pages_y0": f"{first['median'] / CHARS_PER_PAGE:.0f}",
+        "pages_y1": f"{last['median'] / CHARS_PER_PAGE:.0f}",
+        "growth": f"{last['median'] / first['median']:.1f}",
+        "median_all": f"{median_all:,}",
+        "share_over_cap": f"{(filings['item_1a_length'] > TFIDF_CAP).mean():.0%}",
+        "share_read": f"{SBERT_CHARS / median_all:.1%}",
+        "f1": best_f1(),
+        "generated": datetime.now(UTC).strftime("%B %-d, %Y"),
+        "table_rows": rows,
+        "data_json": json.dumps(data, separators=(",", ":")),
+    }
+
+    html = TEMPLATE.read_text(encoding="utf-8")
+    for key, value in fields.items():
+        html = html.replace(f"%%{key}%%", value)
+    leftover = re.findall(r"%%\w+%%", html)
+    if leftover:
+        raise ValueError(f"Unfilled template fields: {sorted(set(leftover))}")
+    return html
+
+
+def main() -> None:
+    OUTPUT.parent.mkdir(exist_ok=True)
+    OUTPUT.write_text(build(), encoding="utf-8")
+    print(f"Report saved to: {OUTPUT}")
+
+
+if __name__ == "__main__":
     main()
