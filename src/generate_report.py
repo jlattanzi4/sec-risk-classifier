@@ -14,7 +14,6 @@ from pathlib import Path
 from datetime import datetime
 
 import pandas as pd
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -55,7 +54,7 @@ def create_hero_metrics(results):
     <div class="metrics-grid">
         <div class="metric-card">
             <div class="metric-value">{results.get('total_paragraphs', 79415):,}</div>
-            <div class="metric-label">Risk Paragraphs Analyzed</div>
+            <div class="metric-label">Risk Disclosures Analyzed</div>
         </div>
         <div class="metric-card">
             <div class="metric-value">{results.get('total_companies', 13970):,}</div>
@@ -66,8 +65,8 @@ def create_hero_metrics(results):
             <div class="metric-label">Years of SEC Filings</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value">71.2%</div>
-            <div class="metric-label">Classification F1 Score</div>
+            <div class="metric-value">21</div>
+            <div class="metric-label">Risk Topics Discovered</div>
         </div>
     </div>
     """
@@ -222,125 +221,6 @@ def create_model_comparison_chart():
             tickformat='.0%'
         )
     )
-
-    return fig.to_html(full_html=False, include_plotlyjs=False)
-
-
-def create_similarity_comparison_chart():
-    """Create lexical vs semantic similarity comparison."""
-    # Simulated data based on actual results
-    np.random.seed(42)
-    n = 200
-    lexical = np.random.beta(3, 10, n) * 0.4 + 0.05
-    semantic = lexical * 0.5 + np.random.beta(5, 5, n) * 0.4 + 0.25
-
-    fig = make_subplots(
-        rows=1, cols=2,
-        subplot_titles=('Similarity Score Distribution', 'Lexical vs Semantic Comparison'),
-        horizontal_spacing=0.12
-    )
-
-    # Distribution comparison
-    fig.add_trace(
-        go.Histogram(
-            x=lexical,
-            name='TF-IDF (Lexical)',
-            opacity=0.7,
-            marker_color='#3B82F6',
-            nbinsx=25,
-            hovertemplate='Similarity: %{x:.2f}<br>Count: %{y}<extra>TF-IDF</extra>'
-        ),
-        row=1, col=1
-    )
-    fig.add_trace(
-        go.Histogram(
-            x=semantic,
-            name='SBERT (Semantic)',
-            opacity=0.7,
-            marker_color='#F59E0B',
-            nbinsx=25,
-            hovertemplate='Similarity: %{x:.2f}<br>Count: %{y}<extra>SBERT</extra>'
-        ),
-        row=1, col=1
-    )
-
-    # Scatter plot
-    fig.add_trace(
-        go.Scatter(
-            x=lexical,
-            y=semantic,
-            mode='markers',
-            marker=dict(color='#8B5CF6', size=7, opacity=0.6),
-            name='Companies',
-            showlegend=False,
-            hovertemplate='Lexical: %{x:.3f}<br>Semantic: %{y:.3f}<extra></extra>'
-        ),
-        row=1, col=2
-    )
-
-    # Add diagonal line (equal similarity reference)
-    fig.add_trace(
-        go.Scatter(
-            x=[0, 0.5],
-            y=[0, 0.5],
-            mode='lines',
-            line=dict(color='#EF4444', dash='dash', width=2),
-            name='Equal Similarity Line',
-            showlegend=False,
-            hoverinfo='skip'
-        ),
-        row=1, col=2
-    )
-
-    fig.update_layout(
-        height=450,
-        margin=dict(l=20, r=20, t=80, b=60),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color='#F8FAFC'),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.08,
-            xanchor="center",
-            x=0.25,
-            font=dict(size=11, color='#F8FAFC')
-        ),
-        barmode='overlay'
-    )
-
-    # Update axes with proper labels
-    fig.update_xaxes(
-        title_text="Similarity Score",
-        row=1, col=1,
-        gridcolor='rgba(128,128,128,0.2)',
-        title_font=dict(size=12, color='#94A3B8'),
-        tickfont=dict(size=10, color='#94A3B8')
-    )
-    fig.update_yaxes(
-        title_text="Number of Companies",
-        row=1, col=1,
-        gridcolor='rgba(128,128,128,0.2)',
-        title_font=dict(size=12, color='#94A3B8'),
-        tickfont=dict(size=10, color='#94A3B8')
-    )
-    fig.update_xaxes(
-        title_text="Lexical Similarity (TF-IDF)",
-        row=1, col=2,
-        gridcolor='rgba(128,128,128,0.2)',
-        title_font=dict(size=12, color='#94A3B8'),
-        tickfont=dict(size=10, color='#94A3B8')
-    )
-    fig.update_yaxes(
-        title_text="Semantic Similarity (SBERT)",
-        row=1, col=2,
-        gridcolor='rgba(128,128,128,0.2)',
-        title_font=dict(size=12, color='#94A3B8'),
-        tickfont=dict(size=10, color='#94A3B8')
-    )
-
-    # Update subplot titles
-    fig.update_annotations(font=dict(size=13, color='#F8FAFC'))
 
     return fig.to_html(full_html=False, include_plotlyjs=False)
 
@@ -681,6 +561,11 @@ def generate_html_report(results):
             border-left-color: var(--accent-green);
         }}
 
+        .insight-box a {{
+            color: var(--accent-blue);
+            text-decoration: underline;
+        }}
+
         .insight-title {{
             font-weight: 600;
             margin-bottom: 8px;
@@ -801,8 +686,21 @@ def generate_html_report(results):
                 revealing patterns in corporate risk communication.
             </p>
             {create_hero_metrics(results)}
+            <div class="insight-box" style="margin-top: 40px; text-align: left;">
+                <div class="insight-title">Under review (November 2026)</div>
+                <p>
+                    A review found that this analysis's headline numbers don't hold as first stated.
+                    The semantic and lexical similarity scores were computed on different amounts of text,
+                    so they can't be compared. The classifier's F1 scores come from an evaluation where
+                    upsampled copies of test rows were also in the training set. And most "paragraphs" are
+                    whole risk sections, because segmentation didn't split them. A sentence-level rework is
+                    tracked in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.
+                    The rest of this page is the original analysis, kept for reference.
+                </p>
+            </div>
         </div>
     </header>
+
 
     <!-- Executive Summary -->
     <section>
@@ -834,15 +732,15 @@ def generate_html_report(results):
                     <div class="card-header">
                         <div class="card-icon">02</div>
                         <div>
-                            <div class="card-title">Key Discovery</div>
-                            <div class="card-subtitle">Semantic vs. Lexical Gap</div>
+                            <div class="card-title">The Open Question</div>
+                            <div class="card-subtitle">How Much Is Boilerplate?</div>
                         </div>
                     </div>
                     <p style="color: var(--text-secondary);">
-                        Companies share <strong style="color: var(--accent-blue);">51% semantic similarity</strong>
-                        but only <strong>21% lexical overlap</strong>. This 2.4x gap reveals that
-                        companies use different words to express similar risk concepts—a form of
-                        "paraphrased boilerplate" invisible to traditional text analysis.
+                        How much of what companies say about risk is copied, from peers or from their
+                        own earlier filings? This first version compared two similarity scores, but they
+                        measure different amounts of text, so the comparison doesn't answer it. The
+                        rework measures copying directly, sentence by sentence.
                     </p>
                 </div>
             </div>
@@ -885,15 +783,15 @@ def generate_html_report(results):
                 {create_model_comparison_chart()}
             </div>
 
-            <div class="insight-box green">
+            <div class="insight-box">
                 <div class="insight-title">
-                    Key Finding
+                    Read With Caution
                 </div>
                 <p>
-                    <strong>TF-IDF ensemble outperforms fine-tuned DistilBERT (71.2% vs 57.8%).</strong><br>
-                    This counterintuitive result occurs because SEC filings contain extremely long documents
-                    (avg 48K characters) that exceed transformer token limits (512 tokens). The ensemble
-                    approach captures more context through bag-of-words representation.
+                    These F1 scores overstate real performance. Minority classes were upsampled before the
+                    train/test split, so copies of test rows were also in training; most test rows share a
+                    company with training rows; and the ensemble was chosen on test F1. The labels come from
+                    keyword rules. So the ensemble's lead over DistilBERT (71.2% vs 57.8%) doesn't hold.
                 </p>
             </div>
         </div>
@@ -931,13 +829,8 @@ def generate_html_report(results):
         <div class="container">
             <div class="section-header">
                 <div class="section-badge">Semantic Analysis</div>
-                <h2>Beyond Word Matching</h2>
-                <p>Sentence embeddings reveal hidden patterns in risk communication</p>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">Lexical (TF-IDF) vs Semantic (SBERT) Similarity</div>
-                {create_similarity_comparison_chart()}
+                <h2>Two Similarity Scores</h2>
+                <p>What each one actually measured</p>
             </div>
 
             <div class="grid-2" style="margin-top: 32px;">
@@ -945,26 +838,29 @@ def generate_html_report(results):
                     <h3 style="margin-bottom: 16px;">TF-IDF (Lexical)</h3>
                     <div style="font-size: 2rem; font-weight: 700; color: var(--accent-blue);">21.3%</div>
                     <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Average word overlap between companies. Measures exact vocabulary matches.
+                        Mean TF-IDF cosine between companies, over up to 50,000 characters of each
+                        section, with rare words weighted up.
                     </p>
                 </div>
                 <div class="card" style="border-left: 4px solid var(--accent-orange);">
                     <h3 style="margin-bottom: 16px;">SBERT (Semantic)</h3>
                     <div style="font-size: 2rem; font-weight: 700; color: var(--accent-orange);">51.0%</div>
                     <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Average meaning overlap. Captures paraphrased content with different words.
+                        Mean SBERT cosine between companies, over only about the first 1,400 characters
+                        of each section (the model's 256-token limit).
                     </p>
                 </div>
             </div>
 
-            <div class="insight-box green">
+            <div class="insight-box">
                 <div class="insight-title">
-                    The 2.4x Gap Explained
+                    Why These Can't Be Compared
                 </div>
                 <p>
-                    The semantic similarity is <strong>2.4x higher</strong> than lexical similarity.
-                    This means companies express similar risk concepts using different vocabulary—
-                    a sophisticated form of boilerplate that traditional analysis misses entirely.
+                    The two scores read different amounts of text on different scales, so the gap between
+                    them doesn't show that companies say the same things in different words. A check
+                    confirms it: shuffling each section's words, which destroys their meaning, raises the
+                    SBERT mean from 51.0% to 57.9%. The rework measures copying directly instead.
                 </p>
             </div>
         </div>
@@ -1141,7 +1037,8 @@ def main():
     html_content = generate_html_report(results)
 
     # Save report
-    output_path = PROJECT_ROOT / 'report.html'
+    output_path = PROJECT_ROOT / 'docs' / 'report.html'
+    output_path.parent.mkdir(exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEC Risk Factor Intelligence | NLP Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-card: #334155;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent-blue: #3B82F6;
+            --accent-green: #10B981;
+            --accent-purple: #8B5CF6;
+            --accent-orange: #F59E0B;
+            --gradient-1: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            --gradient-2: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--gradient-1);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Sections */
+        section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+        }
+
+        /* Insight boxes */
+        .insight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-left: 4px solid var(--accent-blue);
+            padding: 24px;
+            border-radius: 0 12px 12px 0;
+            margin: 24px 0;
+        }
+
+        .insight-box.green {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border-left-color: var(--accent-green);
+        }
+
+        .insight-box a {
+            color: var(--accent-blue);
+            text-decoration: underline;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Methodology */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .method-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .method-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .method-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .method-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+        }
+
+        .skill-bullet {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        footer {
+            padding: 48px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        footer p {
+            color: var(--text-secondary);
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .grid-2, .method-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Chart containers */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-badge">NLP Portfolio Project</div>
+            <h1>SEC Risk Factor Intelligence</h1>
+            <p class="hero-subtitle">
+                Deep learning and NLP analysis of 79,000+ risk disclosures from SEC 10-K filings,
+                revealing patterns in corporate risk communication.
+            </p>
+            
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value">79,415</div>
+            <div class="metric-label">Risk Disclosures Analyzed</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">13,970</div>
+            <div class="metric-label">Unique Companies</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">15</div>
+            <div class="metric-label">Years of SEC Filings</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">21</div>
+            <div class="metric-label">Risk Topics Discovered</div>
+        </div>
+    </div>
+    
+            <div class="insight-box" style="margin-top: 40px; text-align: left;">
+                <div class="insight-title">Under review (November 2026)</div>
+                <p>
+                    A review found that this analysis's headline numbers don't hold as first stated.
+                    The semantic and lexical similarity scores were computed on different amounts of text,
+                    so they can't be compared. The classifier's F1 scores come from an evaluation where
+                    upsampled copies of test rows were also in the training set. And most "paragraphs" are
+                    whole risk sections, because segmentation didn't split them. A sentence-level rework is
+                    tracked in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.
+                    The rest of this page is the original analysis, kept for reference.
+                </p>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Executive Summary -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Executive Summary</div>
+                <h2>What This Analysis Reveals</h2>
+                <p>Combining traditional ML with modern NLP to understand how companies communicate risk</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">01</div>
+                        <div>
+                            <div class="card-title">The Challenge</div>
+                            <div class="card-subtitle">Understanding SEC Risk Disclosures</div>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary);">
+                        SEC 10-K filings contain critical risk information, but manually analyzing
+                        thousands of disclosures is impractical. This project automates the
+                        classification and analysis of risk factors, enabling scalable insights
+                        into corporate risk communication patterns.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">02</div>
+                        <div>
+                            <div class="card-title">The Open Question</div>
+                            <div class="card-subtitle">How Much Is Boilerplate?</div>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary);">
+                        How much of what companies say about risk is copied, from peers or from their
+                        own earlier filings? This first version compared two similarity scores, but they
+                        measure different amounts of text, so the comparison doesn't answer it. The
+                        rework measures copying directly, sentence by sentence.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Overview -->
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Data</div>
+                <h2>Dataset Overview</h2>
+                <p>15 years of SEC 10-K filings from publicly traded companies</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <div class="chart-title">Risk Categories Distribution</div>
+                    <div>                            <div id="601858ad-2ffb-4299-a92f-b2cd7f26b852" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("601858ad-2ffb-4299-a92f-b2cd7f26b852")) {                    Plotly.newPlot(                        "601858ad-2ffb-4299-a92f-b2cd7f26b852",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eCount: %{x:,}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#3B82F6"},"orientation":"h","text":["230","354","1,953","2,205","2,565","2,978","7,706","9,340","11,062","40,675"],"textfont":{"color":"#F8FAFC","size":11},"textposition":"outside","x":[230,354,1953,2205,2565,2978,7706,9340,11062,40675],"y":["Cybersecurity","Technology Innovation","Environmental Climate","Macroeconomic","Reputational","Competitive Market","Personnel Labor","Regulatory Legal","Operational Supply","Financial Liquidity"],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":80,"t":20,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Number of Risk Paragraphs","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)","gridwidth":1},"yaxis":{"title":{"text":"Risk Category","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"title":{},"showlegend":false,"height":420,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Filings Over Time</div>
+                    <div>                            <div id="5110be82-075e-40f0-b1e8-571dfbb89701" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("5110be82-075e-40f0-b1e8-571dfbb89701")) {                    Plotly.newPlot(                        "5110be82-075e-40f0-b1e8-571dfbb89701",                        [{"fill":"tozeroy","fillcolor":"rgba(59, 130, 246, 0.1)","hovertemplate":"\u003cb\u003eYear: %{x}\u003c\u002fb\u003e\u003cbr\u003eParagraphs: %{y:,}\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#3B82F6","width":3},"marker":{"color":"#3B82F6","size":8},"mode":"lines+markers+text","text":["5,024","4,993","5,915","5,723","5,426","5,293","5,519","5,552","5,785","5,537","5,331","5,341","4,982","4,596","4,398"],"textfont":{"color":"#94A3B8","size":9},"textposition":"top center","x":[2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[5024,4993,5915,5723,5426,5293,5519,5552,5785,5537,5331,5341,4982,4596,4398],"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":20,"t":40,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Filing Year","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)","dtick":2},"yaxis":{"title":{"text":"Number of Risk Paragraphs","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"title":{},"height":420,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Classification Results -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Classification</div>
+                <h2>Multi-Class Risk Classification</h2>
+                <p>Comparing traditional ML models with transformer-based approaches</p>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Model Performance Comparison (F1 Score)</div>
+                <div>                            <div id="322b3a6a-6a43-40b0-a0b2-740186db7683" class="plotly-graph-div" style="height:450px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("322b3a6a-6a43-40b0-a0b2-740186db7683")) {                    Plotly.newPlot(                        "322b3a6a-6a43-40b0-a0b2-740186db7683",                        [{"hovertemplate":"\u003cb\u003e%{x}\u003c\u002fb\u003e\u003cbr\u003eF1 Score: %{y:.1%}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":["#64748B","#64748B","#64748B","#64748B","#64748B","#10B981","#EF4444"]},"text":["68.0%","67.0%","65.0%","69.0%","70.0%","71.2%","57.8%"],"textfont":{"color":"#F8FAFC","size":12},"textposition":"outside","x":["Logistic Regression","SVM","Random Forest","XGBoost","LightGBM","Ensemble","DistilBERT"],"y":[0.68,0.67,0.65,0.69,0.7,0.712,0.578],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"shapes":[{"line":{"color":"#10B981","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0.712,"y1":0.712,"yref":"y"}],"annotations":[{"font":{"color":"#10B981","size":11},"showarrow":false,"text":"Best: 71.2%","x":1,"xanchor":"left","xref":"x domain","y":0.712,"yanchor":"middle","yref":"y"}],"yaxis":{"title":{"text":"F1 Score (Macro)","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"range":[0,0.85],"gridcolor":"rgba(128,128,128,0.2)","tickformat":".0%"},"margin":{"l":20,"r":20,"t":40,"b":80},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Model","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"tickangle":-45},"title":{},"height":450,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">
+                    Read With Caution
+                </div>
+                <p>
+                    These F1 scores overstate real performance. Minority classes were upsampled before the
+                    train/test split, so copies of test rows were also in training; most test rows share a
+                    company with training rows; and the ensemble was chosen on test F1. The labels come from
+                    keyword rules. So the ensemble's lead over DistilBERT (71.2% vs 57.8%) doesn't hold.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explainability -->
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Explainability</div>
+                <h2>What Drives Each Classification?</h2>
+                <p>SHAP analysis reveals which words matter most for each risk category</p>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Top Features by Risk Category (SHAP Values)</div>
+                <div>                            <div id="7d775ef2-bbea-4da0-a01d-01fadf69c90a" class="plotly-graph-div" style="height:550px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("7d775ef2-bbea-4da0-a01d-01fadf69c90a")) {                    Plotly.newPlot(                        "7d775ef2-bbea-4da0-a01d-01fadf69c90a",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#3B82F6"},"orientation":"h","showlegend":false,"text":["0.104","0.080","0.055","0.046","0.043"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.1036531167504726,0.079971062088771,0.0548334708264344,0.0459577600893155,0.0431120126258322],"y":["gas","oil","product","costs","rates"],"type":"bar","xaxis":"x","yaxis":"y"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#10B981"},"orientation":"h","showlegend":false,"text":["0.083","0.066","0.050","0.047","0.045"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0829978899055936,0.0659785909429272,0.0500468959876187,0.0474886051498776,0.0450869970776467],"y":["products","technology","company","stock","development"],"type":"bar","xaxis":"x2","yaxis":"y2"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#F59E0B"},"orientation":"h","showlegend":false,"text":["0.096","0.057","0.048","0.047","0.036"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0964832613383454,0.057094238203374,0.0483463540122855,0.0465541264607197,0.0359074924747283],"y":["products","product","sales","loans","rates"],"type":"bar","xaxis":"x3","yaxis":"y3"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#EF4444"},"orientation":"h","showlegend":false,"text":["0.075","0.067","0.037","0.030","0.029"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0750363153035617,0.0669696470370633,0.0373899116739905,0.0298132318080469,0.0289296106861322],"y":["products","company","prices","product","investment"],"type":"bar","xaxis":"x4","yaxis":"y4"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#8B5CF6"},"orientation":"h","showlegend":false,"text":["0.050","0.045","0.044","0.037","0.037"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0503482585947298,0.0449613698359268,0.043876436131663,0.0373191021066839,0.0371283277078465],"y":["company","revenues","risks","competition","competitive"],"type":"bar","xaxis":"x5","yaxis":"y5"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#EC4899"},"orientation":"h","showlegend":false,"text":["0.056","0.039","0.037","0.035","0.033"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0555756065575924,0.0394523135217793,0.0374297811795536,0.0352957843968947,0.033117885918478],"y":["products","company","information","sales","clinical"],"type":"bar","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"xaxis":{"anchor":"y","domain":[0.0,0.25333333333333335],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis":{"anchor":"x","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis2":{"anchor":"y2","domain":[0.37333333333333335,0.6266666666666667],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis2":{"anchor":"x2","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis3":{"anchor":"y3","domain":[0.7466666666666667,1.0],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis3":{"anchor":"x3","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis4":{"anchor":"y4","domain":[0.0,0.25333333333333335],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis4":{"anchor":"x4","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis5":{"anchor":"y5","domain":[0.37333333333333335,0.6266666666666667],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis5":{"anchor":"x5","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis6":{"anchor":"y6","domain":[0.7466666666666667,1.0],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis6":{"anchor":"x6","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"annotations":[{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Environmental Climate","x":0.12666666666666668,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Technology Innovation","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Operational Supply","x":0.8733333333333333,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Financial Liquidity","x":0.12666666666666668,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Competitive Market","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Cybersecurity","x":0.8733333333333333,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"margin":{"l":20,"r":60,"t":80,"b":40},"font":{"family":"Inter, sans-serif","size":10,"color":"#F8FAFC"},"height":550,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">
+                    Why Explainability Matters
+                </div>
+                <p>
+                    In regulated industries like finance, model decisions must be interpretable.
+                    SHAP values provide legally defensible explanations for each classification,
+                    showing exactly which words influenced the model's decision.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Semantic Analysis -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Semantic Analysis</div>
+                <h2>Two Similarity Scores</h2>
+                <p>What each one actually measured</p>
+            </div>
+
+            <div class="grid-2" style="margin-top: 32px;">
+                <div class="card" style="border-left: 4px solid var(--accent-blue);">
+                    <h3 style="margin-bottom: 16px;">TF-IDF (Lexical)</h3>
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-blue);">21.3%</div>
+                    <p style="color: var(--text-secondary); margin-top: 8px;">
+                        Mean TF-IDF cosine between companies, over up to 50,000 characters of each
+                        section, with rare words weighted up.
+                    </p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--accent-orange);">
+                    <h3 style="margin-bottom: 16px;">SBERT (Semantic)</h3>
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-orange);">51.0%</div>
+                    <p style="color: var(--text-secondary); margin-top: 8px;">
+                        Mean SBERT cosine between companies, over only about the first 1,400 characters
+                        of each section (the model's 256-token limit).
+                    </p>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">
+                    Why These Can't Be Compared
+                </div>
+                <p>
+                    The two scores read different amounts of text on different scales, so the gap between
+                    them doesn't show that companies say the same things in different words. A check
+                    confirms it: shuffling each section's words, which destroys their meaning, raises the
+                    SBERT mean from 51.0% to 57.9%. The rework measures copying directly instead.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Topic Modeling -->
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Unsupervised Discovery</div>
+                <h2>Topics Discovered by BERTopic</h2>
+                <p>21 distinct risk themes automatically identified from the corpus</p>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Discovered Topic Distribution</div>
+                <div>                            <div id="d8ec477f-7aab-4ec8-a8e2-5789e5e34923" class="plotly-graph-div" style="height:450px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("d8ec477f-7aab-4ec8-a8e2-5789e5e34923")) {                    Plotly.newPlot(                        "d8ec477f-7aab-4ec8-a8e2-5789e5e34923",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eDocuments: %{x:,}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":[658,406,299,229,221,193,177,176,140,120],"colorscale":[[0.0,"#440154"],[0.1111111111111111,"#482878"],[0.2222222222222222,"#3e4989"],[0.3333333333333333,"#31688e"],[0.4444444444444444,"#26828e"],[0.5555555555555556,"#1f9e89"],[0.6666666666666666,"#35b779"],[0.7777777777777778,"#6ece58"],[0.8888888888888888,"#b5de2b"],[1.0,"#fde725"]],"showscale":false},"orientation":"h","text":["658 docs","406 docs","299 docs","229 docs","221 docs","193 docs","177 docs","176 docs","140 docs","120 docs"],"textfont":{"color":"#F8FAFC","size":11},"textposition":"outside","x":[658,406,299,229,221,193,177,176,140,120],"y":["General Risk Factors","Stock & Investment","Economic Conditions","Forward-Looking Statements","Clinical\u002fBiotech","Financial Losses","Competition","Real Estate\u002fLoans","Oil & Gas","Trust\u002fShares"],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":100,"t":20,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Number of Documents","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis":{"title":{"text":"Discovered Topic","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"title":{},"height":450,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">
+                    Unsupervised Insights
+                </div>
+                <p>
+                    BERTopic discovered <strong>industry-specific risk patterns</strong> (Oil & Gas, Real Estate,
+                    Biotech) that the manual taxonomy doesn't capture. Only 14% of discovered topics
+                    align strongly with predefined categories, revealing new dimensions of risk disclosure.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Methodology</div>
+                <h2>Technical Approach</h2>
+                <p>A comprehensive NLP pipeline combining multiple techniques</p>
+            </div>
+
+            <div class="method-grid">
+                <div class="method-card">
+                    <div class="method-icon">1</div>
+                    <div class="method-title">Text Classification</div>
+                    <div class="method-desc">
+                        TF-IDF vectorization with ensemble of Logistic Regression, SVM,
+                        Random Forest, XGBoost, and LightGBM
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">2</div>
+                    <div class="method-title">Transformers</div>
+                    <div class="method-desc">
+                        Fine-tuned DistilBERT for comparison, demonstrating when
+                        traditional ML outperforms deep learning
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">3</div>
+                    <div class="method-title">Sentence Embeddings</div>
+                    <div class="method-desc">
+                        SBERT (all-MiniLM-L6-v2) for semantic similarity analysis
+                        and boilerplate detection
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">4</div>
+                    <div class="method-title">Topic Modeling</div>
+                    <div class="method-desc">
+                        BERTopic for unsupervised discovery of latent themes
+                        using UMAP + HDBSCAN clustering
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">5</div>
+                    <div class="method-title">Explainability</div>
+                    <div class="method-desc">
+                        SHAP (SHapley Additive exPlanations) for interpretable
+                        feature importance analysis
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">6</div>
+                    <div class="method-title">Visualization</div>
+                    <div class="method-desc">
+                        Interactive Plotly dashboards and comprehensive
+                        matplotlib visualizations
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Demonstrated -->
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Skills</div>
+                <h2>NLP Competencies Demonstrated</h2>
+            </div>
+
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Multi-class text classification at scale</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Transformer fine-tuning (DistilBERT)</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Sentence embeddings (SBERT)</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Unsupervised topic modeling (BERTopic)</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Model explainability (SHAP)</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Ensemble methods and hyperparameter tuning</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Memory-efficient data processing (PyArrow)</span>
+                </div>
+                <div class="skill-item">
+                    <span class="skill-bullet"></span>
+                    <span>Interactive data visualization (Plotly)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p style="font-size: 1.25rem; margin-bottom: 16px;">
+                <strong>SEC Risk Factor Intelligence</strong>
+            </p>
+            <p>
+                Built with Python, scikit-learn, Transformers, BERTopic, SHAP, and Plotly<br>
+                <a href="https://github.com/jlattanzi4" target="_blank">View on GitHub</a>
+            </p>
+            <p style="margin-top: 24px; font-size: 0.875rem;">
+                Generated November 09, 2026
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
