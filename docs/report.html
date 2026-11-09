@@ -1,683 +1,486 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEC Risk Factor Intelligence | NLP Analysis</title>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0F172A;
-            --bg-secondary: #1E293B;
-            --bg-card: #334155;
-            --text-primary: #F8FAFC;
-            --text-secondary: #94A3B8;
-            --accent-blue: #3B82F6;
-            --accent-green: #10B981;
-            --accent-purple: #8B5CF6;
-            --accent-orange: #F59E0B;
-            --gradient-1: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            --gradient-2: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How much of a risk disclosure is boilerplate?</title>
+<meta name="description" content="72,613 Item 1A risk sections from SEC 10-K filings, 2006–2020: how long they are, what a first analysis got wrong, and what comes next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --ink: #1c1e21;
+  --ink-2: #5b6068;
+  --rule: #e4e6e9;
+  --grid: #eef0f2;
+  --sheet: #fbfbfc;
+  --text-line: #cfd3d8;
+  --series: #2a78d6;
+  --band: rgba(42, 120, 214, 0.14);
+  --highlight: #eda100;
+  --redline: #d03b3b;
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: "Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #b4b3ad;
+    --rule: #34342f;
+    --grid: #2a2a27;
+    --sheet: #22221f;
+    --text-line: #4a4a45;
+    --series: #3987e5;
+    --band: rgba(57, 135, 229, 0.2);
+    --highlight: #c98500;
+    --redline: #e66767;
+  }
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.1875rem/1.6 var(--serif);
+  font-optical-sizing: auto;
+}
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--series); outline-offset: 3px; border-radius: 2px; }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
+.page { max-width: 58rem; margin: 0 auto; padding: 0 1.5rem 6rem; }
+.prose { max-width: 36rem; }
+.prose p { margin: 0 0 1.1em; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+.masthead {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 1.5rem 0 0; font: 400 0.875rem/1.4 var(--sans); color: var(--ink-2);
+}
+.masthead a { text-decoration: none; }
+.masthead a:hover { color: var(--ink); text-decoration: underline; }
 
-        /* Hero Section */
-        .hero {
-            padding: 80px 0 60px;
-            text-align: center;
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-        }
+h1 {
+  margin: 5.5rem 0 1.5rem; max-width: 14ch;
+  font: 600 clamp(2.5rem, 6.5vw, 4.25rem)/1.04 var(--serif);
+  letter-spacing: -0.02em;
+}
+h2 {
+  margin: 4.5rem 0 1rem;
+  font: 600 1.5rem/1.25 var(--serif); letter-spacing: -0.01em;
+}
+.lede { font-size: 1.3125rem; line-height: 1.5; }
 
-        .hero-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            background: var(--gradient-1);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 24px;
-        }
+/* Redline: claims that don't hold are struck, corrections are inserted */
+.review { margin: 2.5rem 0 0; padding: 1.5rem 0 0; border-top: 1px solid var(--rule); }
+.review h2 { margin-top: 0; font-size: 1.125rem; }
+.review ul { list-style: none; margin: 0; padding: 0; }
+.review li { margin: 0 0 1.1rem; }
+del {
+  text-decoration-line: line-through; text-decoration-color: var(--redline);
+  text-decoration-thickness: 2px; color: var(--ink-2);
+}
+ins {
+  text-decoration-line: underline; text-decoration-color: var(--redline);
+  text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+}
 
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+figure { margin: 2rem 0 0; }
+figcaption {
+  max-width: 40rem; margin-top: 0.9rem;
+  font: 400 0.875rem/1.5 var(--sans); color: var(--ink-2);
+}
+figcaption b { font-weight: 600; color: var(--ink); }
 
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 0 0 1.25rem;
+  font: 400 0.875rem/1.3 var(--sans); color: var(--ink-2);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.key { width: 1.5rem; height: 0.5rem; border-radius: 2px; }
+.key.read { background: var(--highlight); }
+.key.cap { height: 2px; background: var(--series); }
+.key.unread { background: var(--text-line); opacity: 0.45; }
 
-        /* Metrics Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin: 40px 0;
-        }
+/* Figure 1: sections drawn as pages */
+.filing { margin: 0 0 1.75rem; }
+.filing-label { margin: 0 0 0.6rem; font: 400 0.9375rem/1.4 var(--sans); }
+.filing-label strong { font-weight: 600; }
+.filing-label .muted { color: var(--ink-2); }
+.sheets { display: flex; flex-wrap: wrap; gap: 5px; }
+.sheet {
+  --pad: 5px;
+  position: relative; width: 28px; height: 37px; padding: var(--pad) 4px;
+  display: flex; flex-direction: column; gap: 1.5px;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 2px;
+}
+.sheet i { display: block; height: 2px; border-radius: 1px; background: var(--text-line); }
+.sheet i.read { height: 2px; background: var(--highlight); box-shadow: 0 0 0 1px var(--highlight); }
+.sheet i.unread { opacity: 0.35; }
+.sheet .cut { position: absolute; left: -4px; right: -4px; height: 2px; background: var(--series); border-radius: 1px; }
+.sheet:hover { border-color: var(--ink-2); }
 
-        .metric-card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 32px 24px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font: 400 12px var(--sans); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chart text.label { fill: var(--ink); font-weight: 500; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.chart .hit:focus-visible { outline: none; }
+.chart:has(.hit:focus-visible) { outline: 2px solid var(--series); outline-offset: 6px; border-radius: 2px; }
 
-        .metric-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
+.tooltip {
+  position: fixed; z-index: 10; pointer-events: none; opacity: 0;
+  min-width: 11rem; padding: 0.6rem 0.75rem;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  font: 400 0.8125rem/1.45 var(--sans); font-variant-numeric: tabular-nums;
+}
+.tooltip.on { opacity: 1; }
+.tooltip strong { display: block; margin-bottom: 0.2rem; font-weight: 600; }
+.tooltip div { display: flex; justify-content: space-between; gap: 1rem; color: var(--ink-2); }
+.tooltip div span:last-child { color: var(--ink); }
 
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+details { margin: 1.5rem 0 0; font: 400 0.875rem/1.5 var(--sans); }
+summary { cursor: pointer; color: var(--ink-2); width: fit-content; }
+summary:hover { color: var(--ink); }
 
-        .metric-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
+table { border-collapse: collapse; font: 400 0.875rem/1.4 var(--sans); font-variant-numeric: tabular-nums; }
+th, td { padding: 0.5rem 1.25rem 0.5rem 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; }
+td.num, th.num { text-align: right; padding-right: 0; padding-left: 1.25rem; }
+.numbers { margin-top: 1rem; }
 
-        /* Sections */
-        section {
-            padding: 80px 0;
-        }
+.ledger { width: 100%; max-width: 46rem; margin-top: 1.5rem; }
+.ledger td { padding-top: 0.8rem; padding-bottom: 0.8rem; }
+.ledger td:first-child { width: 30%; font-weight: 500; }
+.ledger del { text-decoration-thickness: 1.5px; }
+.status { display: inline-flex; gap: 0.4rem; align-items: baseline; }
+.status.fails { color: var(--redline); }
+.status.fails::before { content: "✕"; font-size: 0.75em; }
+.status.redo { color: var(--ink-2); }
+.status.redo::before { content: "↻"; font-size: 0.85em; }
+.status + span { display: block; color: var(--ink-2); margin-top: 0.15rem; }
 
-        .section-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
+footer {
+  margin-top: 6rem; padding-top: 1.25rem; border-top: 1px solid var(--rule);
+  font: 400 0.8125rem/1.6 var(--sans); color: var(--ink-2);
+}
+footer p { margin: 0 0 0.4rem; max-width: 40rem; }
 
-        .section-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-blue);
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-        }
-
-        .section-header h2 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .section-header p {
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 32px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--gradient-1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .card-subtitle {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        /* Grid layouts */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 32px;
-        }
-
-        /* Insight boxes */
-        .insight-box {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-            border-left: 4px solid var(--accent-blue);
-            padding: 24px;
-            border-radius: 0 12px 12px 0;
-            margin: 24px 0;
-        }
-
-        .insight-box.green {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-            border-left-color: var(--accent-green);
-        }
-
-        .insight-box a {
-            color: var(--accent-blue);
-            text-decoration: underline;
-        }
-
-        .insight-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Methodology */
-        .method-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }
-
-        .method-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 28px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .method-icon {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-        }
-
-        .method-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .method-desc {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        /* Skills */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-top: 32px;
-        }
-
-        .skill-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            background: var(--bg-card);
-            border-radius: 12px;
-        }
-
-        .skill-bullet {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        /* Footer */
-        footer {
-            padding: 48px 0;
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        footer p {
-            color: var(--text-secondary);
-        }
-
-        footer a {
-            color: var(--accent-blue);
-            text-decoration: none;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .grid-2, .method-grid {
-                grid-template-columns: 1fr;
-            }
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-        }
-
-        /* Chart containers */
-        .chart-container {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 24px 0;
-        }
-
-        .chart-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-    </style>
+@media (max-width: 600px) {
+  body { font-size: 1.0625rem; }
+  h1 { margin-top: 3.5rem; }
+  h2 { margin-top: 3.5rem; }
+  .lede { font-size: 1.1875rem; }
+  .sheet { --pad: 4px; width: 24px; height: 32px; gap: 1px; }
+  .ledger td:first-child { width: auto; }
+  .ledger tr { display: grid; grid-template-columns: 1fr; border-bottom: 1px solid var(--rule); }
+  .ledger td { border: 0; padding: 0.25rem 0; }
+  .ledger tr td:first-child { padding-top: 0.9rem; }
+  .ledger tr td:last-child { padding-bottom: 0.9rem; }
+  .ledger thead { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip { transition: opacity 120ms ease; }
+}
+</style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <header class="hero">
-        <div class="container">
-            <div class="hero-badge">NLP Portfolio Project</div>
-            <h1>SEC Risk Factor Intelligence</h1>
-            <p class="hero-subtitle">
-                Deep learning and NLP analysis of 79,000+ risk disclosures from SEC 10-K filings,
-                revealing patterns in corporate risk communication.
-            </p>
-            
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-value">79,415</div>
-            <div class="metric-label">Risk Disclosures Analyzed</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">13,970</div>
-            <div class="metric-label">Unique Companies</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">15</div>
-            <div class="metric-label">Years of SEC Filings</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">21</div>
-            <div class="metric-label">Risk Topics Discovered</div>
-        </div>
+<div class="page">
+
+<header class="masthead">
+  <a href="https://github.com/jlattanzi4">Joseph Lattanzi</a>
+  <a href="https://github.com/jlattanzi4/sec-risk-classifier">Code on GitHub</a>
+</header>
+
+<main>
+<h1>How much of a risk disclosure is boilerplate?</h1>
+
+<div class="prose">
+  <p class="lede">Every public company files a 10-K with the SEC each year, and its Item 1A lists the risks the company faces. This project reads 72,613 of those sections, from 13,970 companies between 2006 and 2020, and asks how much of each one is written fresh and how much is copied.</p>
+</div>
+
+<section class="review prose" aria-labelledby="review-h">
+  <h2 id="review-h">Under review</h2>
+  <p>A review in November 2026 found that the first version's two headline findings don't hold up. They're struck below, with the reason in their place.</p>
+  <ul>
+    <li><del>Filings are 51% alike in meaning but only 21% alike in wording.</del> <ins>The two similarity scores read different amounts of text, so they can't be compared.</ins></li>
+    <li><del>A TF-IDF ensemble classifies risks with 71.2% F1.</del> <ins>That score comes from an evaluation where copies of test rows were also in the training set.</ins></li>
+  </ul>
+  <p>A rework is under way in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.</p>
+</section>
+
+<section aria-labelledby="read-h">
+  <h2 id="read-h">What the model actually read</h2>
+  <div class="prose">
+    <p>Both similarity scores compared 200 companies' 2020 filings. The “meaning” score came from a sentence-embedding model that stops after 256 tokens, about the first 1,400 characters of a section. The median risk section ran 25,074 characters in 2006 and 72,649 in 2020. Drawn as pages, this is how much of it the model saw.</p>
+  </div>
+  <figure>
+    <div class="legend" aria-hidden="true">
+      <span><i class="key read"></i>Read by the embedding model</span>
+      <span><i class="key cap"></i>Where TF-IDF stopped, at 50,000 characters</span>
+      <span><i class="key unread"></i>Read by neither</span>
     </div>
-    
-            <div class="insight-box" style="margin-top: 40px; text-align: left;">
-                <div class="insight-title">Under review (November 2026)</div>
-                <p>
-                    A review found that this analysis's headline numbers don't hold as first stated.
-                    The semantic and lexical similarity scores were computed on different amounts of text,
-                    so they can't be compared. The classifier's F1 scores come from an evaluation where
-                    upsampled copies of test rows were also in the training set. And most "paragraphs" are
-                    whole risk sections, because segmentation didn't split them. A sentence-level rework is
-                    tracked in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.
-                    The rest of this page is the original analysis, kept for reference.
-                </p>
-            </div>
-        </div>
-    </header>
+    <div id="pages" role="img" aria-label="The median 2006 section is 8 pages and the median 2020 section is 24 pages. The embedding model read about the first half page of each. TF-IDF read the whole 2006 section but stopped two thirds of the way down page 17 of the 2020 section."></div>
+    <figcaption><b>Figure 1.</b> The median Item 1A section in 2006 and 2020, at about 3,000 characters a page. The embedding model saw 3.4% of a typical section.</figcaption>
+  </figure>
+</section>
 
+<section aria-labelledby="length-h">
+  <h2 id="length-h">Risk sections keep getting longer</h2>
+  <div class="prose">
+    <p>The median section grew 2.9× between 2006 and 2020. Across all years it's 41,548 characters, and 40% of sections run past the 50,000 characters TF-IDF read, so even the “wording” score missed the end of many filings.</p>
+  </div>
+  <figure>
+    <div class="chart" id="length-chart"></div>
+    <figcaption><b>Figure 2.</b> Median length of an Item 1A section by filing year, in characters. Shaded: the middle half of filings, from the 25th to the 75th percentile.</figcaption>
+  </figure>
+  <figure>
+    <div class="chart" id="count-chart"></div>
+    <figcaption><b>Figure 3.</b> 10-K filings with an Item 1A section, by filing year.</figcaption>
+  </figure>
+  <details>
+    <summary>Show the numbers</summary>
+    <table class="numbers">
+      <thead><tr><th>Year</th><th class="num">Filings</th><th class="num">Median length</th><th class="num">25th percentile</th><th class="num">75th percentile</th></tr></thead>
+      <tbody>
+        <tr><td>2006</td><td class="num">4,952</td><td class="num">25,074</td><td class="num">14,410</td><td class="num">40,624</td></tr>
+        <tr><td>2007</td><td class="num">4,967</td><td class="num">28,032</td><td class="num">16,422</td><td class="num">45,137</td></tr>
+        <tr><td>2008</td><td class="num">5,758</td><td class="num">29,412</td><td class="num">17,004</td><td class="num">46,581</td></tr>
+        <tr><td>2009</td><td class="num">5,562</td><td class="num">31,600</td><td class="num">18,959</td><td class="num">49,543</td></tr>
+        <tr><td>2010</td><td class="num">5,381</td><td class="num">33,843</td><td class="num">20,238</td><td class="num">52,391</td></tr>
+        <tr><td>2011</td><td class="num">5,253</td><td class="num">36,273</td><td class="num">22,140</td><td class="num">55,877</td></tr>
+        <tr><td>2012</td><td class="num">5,064</td><td class="num">39,194</td><td class="num">23,759</td><td class="num">60,410</td></tr>
+        <tr><td>2013</td><td class="num">4,927</td><td class="num">42,197</td><td class="num">26,147</td><td class="num">65,720</td></tr>
+        <tr><td>2014</td><td class="num">4,818</td><td class="num">46,860</td><td class="num">29,223</td><td class="num">75,782</td></tr>
+        <tr><td>2015</td><td class="num">4,617</td><td class="num">49,351</td><td class="num">31,168</td><td class="num">79,566</td></tr>
+        <tr><td>2016</td><td class="num">4,454</td><td class="num">53,300</td><td class="num">33,355</td><td class="num">85,750</td></tr>
+        <tr><td>2017</td><td class="num">4,296</td><td class="num">57,996</td><td class="num">35,947</td><td class="num">94,541</td></tr>
+        <tr><td>2018</td><td class="num">4,187</td><td class="num">62,154</td><td class="num">38,428</td><td class="num">100,766</td></tr>
+        <tr><td>2019</td><td class="num">4,100</td><td class="num">67,028</td><td class="num">41,517</td><td class="num">107,867</td></tr>
+        <tr><td>2020</td><td class="num">4,277</td><td class="num">72,649</td><td class="num">46,865</td><td class="num">125,842</td></tr>
+      </tbody>
+    </table>
+  </details>
+</section>
 
-    <!-- Executive Summary -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Executive Summary</div>
-                <h2>What This Analysis Reveals</h2>
-                <p>Combining traditional ML with modern NLP to understand how companies communicate risk</p>
-            </div>
+<section aria-labelledby="tried-h">
+  <h2 id="tried-h">What the first version tried</h2>
+  <div class="prose">
+    <p>Each method ran on whole sections, because the step meant to split them into paragraphs didn't split anything. That alone means every result needs redoing; two of them also have problems of their own.</p>
+  </div>
+  <table class="ledger">
+    <thead><tr><th>Method</th><th>What it reported</th><th>Where it stands</th></tr></thead>
+    <tbody>
+      <tr><td>Similarity, TF-IDF vs. sentence embeddings</td><td><del>51% vs. 21%</del></td><td><span class="status fails">Doesn't hold</span><span>Scores computed on different amounts of text</span></td></tr>
+      <tr><td>Classification, TF-IDF ensemble and DistilBERT</td><td><del>71.2% F1</del></td><td><span class="status fails">Doesn't hold</span><span>Leaky evaluation; labels came from keyword rules</span></td></tr>
+      <tr><td>Topic modeling, BERTopic</td><td>21 risk themes</td><td><span class="status redo">To redo on sentences</span><span>Ran on whole sections</span></td></tr>
+      <tr><td>Explanations, SHAP</td><td>Top words per risk category</td><td><span class="status redo">To redo</span><span>Explained a separate model, not the ensemble</span></td></tr>
+    </tbody>
+  </table>
+</section>
 
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">01</div>
-                        <div>
-                            <div class="card-title">The Challenge</div>
-                            <div class="card-subtitle">Understanding SEC Risk Disclosures</div>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary);">
-                        SEC 10-K filings contain critical risk information, but manually analyzing
-                        thousands of disclosures is impractical. This project automates the
-                        classification and analysis of risk factors, enabling scalable insights
-                        into corporate risk communication patterns.
-                    </p>
-                </div>
+<section aria-labelledby="next-h" class="prose">
+  <h2 id="next-h">What comes next</h2>
+  <p>The rework splits each section into sentences and asks a narrower question: how much of a company's risk section is copied, from its peers or from its own previous filing?</p>
+  <p>It will report shares rather than averages: the sentences with a near-verbatim match elsewhere, the ones that are paraphrased, and how much carries over from year to year, with 2020's pandemic disclosures as a natural test. Every number will come with a baseline, like shuffled text and random pairs of filings, so it's clear what counts as high.</p>
+  <p>Follow along in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.</p>
+</section>
+</main>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">02</div>
-                        <div>
-                            <div class="card-title">The Open Question</div>
-                            <div class="card-subtitle">How Much Is Boilerplate?</div>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary);">
-                        How much of what companies say about risk is copied, from peers or from their
-                        own earlier filings? This first version compared two similarity scores, but they
-                        measure different amounts of text, so the comparison doesn't answer it. The
-                        rework measures copying directly, sentence by sentence.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+<footer>
+  <p>Data: <a href="https://huggingface.co/datasets/eloukas/edgar-corpus">EDGAR-CORPUS</a>, 10-K filings 2006–2020, filtered to those with an Item 1A section.</p>
+  <p>Generated November 9, 2026 from <a href="https://github.com/jlattanzi4/sec-risk-classifier">jlattanzi4/sec-risk-classifier</a>.</p>
+</footer>
 
-    <!-- Data Overview -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Data</div>
-                <h2>Dataset Overview</h2>
-                <p>15 years of SEC 10-K filings from publicly traded companies</p>
-            </div>
+</div>
 
-            <div class="grid-2">
-                <div class="chart-container">
-                    <div class="chart-title">Risk Categories Distribution</div>
-                    <div>                            <div id="601858ad-2ffb-4299-a92f-b2cd7f26b852" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("601858ad-2ffb-4299-a92f-b2cd7f26b852")) {                    Plotly.newPlot(                        "601858ad-2ffb-4299-a92f-b2cd7f26b852",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eCount: %{x:,}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#3B82F6"},"orientation":"h","text":["230","354","1,953","2,205","2,565","2,978","7,706","9,340","11,062","40,675"],"textfont":{"color":"#F8FAFC","size":11},"textposition":"outside","x":[230,354,1953,2205,2565,2978,7706,9340,11062,40675],"y":["Cybersecurity","Technology Innovation","Environmental Climate","Macroeconomic","Reputational","Competitive Market","Personnel Labor","Regulatory Legal","Operational Supply","Financial Liquidity"],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":80,"t":20,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Number of Risk Paragraphs","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)","gridwidth":1},"yaxis":{"title":{"text":"Risk Category","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"title":{},"showlegend":false,"height":420,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Filings Over Time</div>
-                    <div>                            <div id="5110be82-075e-40f0-b1e8-571dfbb89701" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("5110be82-075e-40f0-b1e8-571dfbb89701")) {                    Plotly.newPlot(                        "5110be82-075e-40f0-b1e8-571dfbb89701",                        [{"fill":"tozeroy","fillcolor":"rgba(59, 130, 246, 0.1)","hovertemplate":"\u003cb\u003eYear: %{x}\u003c\u002fb\u003e\u003cbr\u003eParagraphs: %{y:,}\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#3B82F6","width":3},"marker":{"color":"#3B82F6","size":8},"mode":"lines+markers+text","text":["5,024","4,993","5,915","5,723","5,426","5,293","5,519","5,552","5,785","5,537","5,331","5,341","4,982","4,596","4,398"],"textfont":{"color":"#94A3B8","size":9},"textposition":"top center","x":[2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[5024,4993,5915,5723,5426,5293,5519,5552,5785,5537,5331,5341,4982,4596,4398],"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":20,"t":40,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Filing Year","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)","dtick":2},"yaxis":{"title":{"text":"Number of Risk Paragraphs","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"title":{},"height":420,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+<script type="application/json" id="report-data">{"years":[{"year":2006,"count":4952,"median":25074,"p25":14410,"p75":40624},{"year":2007,"count":4967,"median":28032,"p25":16422,"p75":45137},{"year":2008,"count":5758,"median":29412,"p25":17004,"p75":46581},{"year":2009,"count":5562,"median":31600,"p25":18959,"p75":49543},{"year":2010,"count":5381,"median":33843,"p25":20238,"p75":52391},{"year":2011,"count":5253,"median":36273,"p25":22140,"p75":55877},{"year":2012,"count":5064,"median":39194,"p25":23759,"p75":60410},{"year":2013,"count":4927,"median":42197,"p25":26147,"p75":65720},{"year":2014,"count":4818,"median":46860,"p25":29223,"p75":75782},{"year":2015,"count":4617,"median":49351,"p25":31168,"p75":79566},{"year":2016,"count":4454,"median":53300,"p25":33355,"p75":85750},{"year":2017,"count":4296,"median":57996,"p25":35947,"p75":94541},{"year":2018,"count":4187,"median":62154,"p25":38428,"p75":100766},{"year":2019,"count":4100,"median":67028,"p25":41517,"p75":107867},{"year":2020,"count":4277,"median":72649,"p25":46865,"p75":125842}],"pageRows":[{"year":2006,"chars":25074,"pages":8.358},{"year":2020,"chars":72649,"pages":24.216333333333335}],"charsPerPage":3000,"sbertChars":1400,"tfidfCap":50000}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById("report-data").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (n) => n.toLocaleString("en-US");
+  const short = (n) => (n >= 1000 ? `${Math.round(n / 1000)}K` : `${n}`);
+  const tip = document.getElementById("tooltip");
 
-    <!-- Classification Results -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Classification</div>
-                <h2>Multi-Class Risk Classification</h2>
-                <p>Comparing traditional ML models with transformer-based approaches</p>
-            </div>
+  function showTip(html, x, y) {
+    tip.innerHTML = html;
+    tip.classList.add("on");
+    const r = tip.getBoundingClientRect();
+    const left = Math.min(Math.max(8, x + 14), window.innerWidth - r.width - 8);
+    const top = y - r.height - 14 < 8 ? y + 18 : y - r.height - 14;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+  const hideTip = () => tip.classList.remove("on");
+  const row = (k, v) => `<div><span>${k}</span><span>${v}</span></div>`;
 
-            <div class="chart-container">
-                <div class="chart-title">Model Performance Comparison (F1 Score)</div>
-                <div>                            <div id="322b3a6a-6a43-40b0-a0b2-740186db7683" class="plotly-graph-div" style="height:450px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("322b3a6a-6a43-40b0-a0b2-740186db7683")) {                    Plotly.newPlot(                        "322b3a6a-6a43-40b0-a0b2-740186db7683",                        [{"hovertemplate":"\u003cb\u003e%{x}\u003c\u002fb\u003e\u003cbr\u003eF1 Score: %{y:.1%}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":["#64748B","#64748B","#64748B","#64748B","#64748B","#10B981","#EF4444"]},"text":["68.0%","67.0%","65.0%","69.0%","70.0%","71.2%","57.8%"],"textfont":{"color":"#F8FAFC","size":12},"textposition":"outside","x":["Logistic Regression","SVM","Random Forest","XGBoost","LightGBM","Ensemble","DistilBERT"],"y":[0.68,0.67,0.65,0.69,0.7,0.712,0.578],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"shapes":[{"line":{"color":"#10B981","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0.712,"y1":0.712,"yref":"y"}],"annotations":[{"font":{"color":"#10B981","size":11},"showarrow":false,"text":"Best: 71.2%","x":1,"xanchor":"left","xref":"x domain","y":0.712,"yanchor":"middle","yref":"y"}],"yaxis":{"title":{"text":"F1 Score (Macro)","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"range":[0,0.85],"gridcolor":"rgba(128,128,128,0.2)","tickformat":".0%"},"margin":{"l":20,"r":20,"t":40,"b":80},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Model","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"tickangle":-45},"title":{},"height":450,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
-            </div>
+  function el(name, attrs = {}, parent) {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
 
-            <div class="insight-box">
-                <div class="insight-title">
-                    Read With Caution
-                </div>
-                <p>
-                    These F1 scores overstate real performance. Minority classes were upsampled before the
-                    train/test split, so copies of test rows were also in training; most test rows share a
-                    company with training rows; and the ensemble was chosen on test F1. The labels come from
-                    keyword rules. So the ensemble's lead over DistilBERT (71.2% vs 57.8%) doesn't hold.
-                </p>
-            </div>
-        </div>
-    </section>
+  /* Figure 1: each median section drawn as pages */
+  function drawPages() {
+    const root = document.getElementById("pages");
+    const { charsPerPage, sbertChars, tfidfCap } = data;
+    const LINES = 9;
+    for (const f of data.pageRows) {
+      const block = document.createElement("div");
+      block.className = "filing";
+      block.innerHTML = `<p class="filing-label"><strong>${f.year}</strong> <span class="muted">median section, ${fmt(f.chars)} characters, about ${f.pages.toFixed(1)} pages</span></p>`;
+      const sheets = document.createElement("div");
+      sheets.className = "sheets";
+      const n = Math.ceil(f.chars / charsPerPage);
+      for (let p = 0; p < n; p++) {
+        const start = p * charsPerPage;
+        const end = Math.min(f.chars, start + charsPerPage);
+        const sheet = document.createElement("div");
+        sheet.className = "sheet";
+        const lines = Math.max(1, Math.round(((end - start) / charsPerPage) * LINES));
+        for (let l = 0; l < lines; l++) {
+          const at = start + (l / LINES) * charsPerPage;
+          const line = document.createElement("i");
+          line.style.width = `${[100, 92, 97, 88, 100, 95, 84, 99, 70][l]}%`;
+          if (at < sbertChars) line.className = "read";
+          else if (at >= tfidfCap) line.className = "unread";
+          sheet.appendChild(line);
+        }
+        if (start < tfidfCap && tfidfCap < end) {
+          const cut = document.createElement("span");
+          cut.className = "cut";
+          cut.style.top = `calc(var(--pad) + ${(tfidfCap - start) / charsPerPage} * (100% - 2 * var(--pad)))`;
+          sheet.appendChild(cut);
+        }
+        const read = start < sbertChars ? " Includes everything the embedding model read." : start >= tfidfCap ? " Past TF-IDF's limit." : "";
+        sheet.addEventListener("pointermove", (e) =>
+          showTip(`<strong>Page ${p + 1}</strong>${row("Characters", `${fmt(start + 1)}–${fmt(end)}`)}${read ? `<div><span>${read.trim()}</span></div>` : ""}`, e.clientX, e.clientY));
+        sheet.addEventListener("pointerleave", hideTip);
+        sheets.appendChild(sheet);
+      }
+      block.appendChild(sheets);
+      root.appendChild(block);
+    }
+  }
 
-    <!-- Explainability -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Explainability</div>
-                <h2>What Drives Each Classification?</h2>
-                <p>SHAP analysis reveals which words matter most for each risk category</p>
-            </div>
+  /* Shared axis frame for figures 2 and 3 */
+  function frame(container, height, yMax, yStep) {
+    container.innerHTML = "";
+    const width = container.clientWidth;
+    const m = { top: 12, right: width < 520 ? 12 : 120, bottom: 28, left: 44 };
+    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, height, "aria-hidden": "true" }, container);
+    const years = data.years.map((d) => d.year);
+    const x0 = years[0], x1 = years[years.length - 1];
+    const iw = width - m.left - m.right, ih = height - m.top - m.bottom;
+    const x = (yr) => m.left + ((yr - x0) / (x1 - x0)) * iw;
+    const y = (v) => m.top + ih - (v / yMax) * ih;
+    for (let v = 0; v <= yMax + 1; v += yStep) {
+      el("line", { x1: m.left, x2: m.left + iw, y1: y(v), y2: y(v), stroke: v === 0 ? "var(--ink-2)" : "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: m.left - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = short(v);
+    }
+    const every = width < 520 ? 4 : 2;
+    years.forEach((yr, i) => {
+      if (i % every === 0 || i === years.length - 1) el("text", { x: x(yr), y: m.top + ih + 18, "text-anchor": "middle" }, svg).textContent = yr;
+    });
+    return { svg, x, y, m, iw, ih, width, years };
+  }
 
-            <div class="chart-container">
-                <div class="chart-title">Top Features by Risk Category (SHAP Values)</div>
-                <div>                            <div id="7d775ef2-bbea-4da0-a01d-01fadf69c90a" class="plotly-graph-div" style="height:550px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("7d775ef2-bbea-4da0-a01d-01fadf69c90a")) {                    Plotly.newPlot(                        "7d775ef2-bbea-4da0-a01d-01fadf69c90a",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#3B82F6"},"orientation":"h","showlegend":false,"text":["0.104","0.080","0.055","0.046","0.043"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.1036531167504726,0.079971062088771,0.0548334708264344,0.0459577600893155,0.0431120126258322],"y":["gas","oil","product","costs","rates"],"type":"bar","xaxis":"x","yaxis":"y"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#10B981"},"orientation":"h","showlegend":false,"text":["0.083","0.066","0.050","0.047","0.045"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0829978899055936,0.0659785909429272,0.0500468959876187,0.0474886051498776,0.0450869970776467],"y":["products","technology","company","stock","development"],"type":"bar","xaxis":"x2","yaxis":"y2"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#F59E0B"},"orientation":"h","showlegend":false,"text":["0.096","0.057","0.048","0.047","0.036"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0964832613383454,0.057094238203374,0.0483463540122855,0.0465541264607197,0.0359074924747283],"y":["products","product","sales","loans","rates"],"type":"bar","xaxis":"x3","yaxis":"y3"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#EF4444"},"orientation":"h","showlegend":false,"text":["0.075","0.067","0.037","0.030","0.029"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0750363153035617,0.0669696470370633,0.0373899116739905,0.0298132318080469,0.0289296106861322],"y":["products","company","prices","product","investment"],"type":"bar","xaxis":"x4","yaxis":"y4"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#8B5CF6"},"orientation":"h","showlegend":false,"text":["0.050","0.045","0.044","0.037","0.037"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0503482585947298,0.0449613698359268,0.043876436131663,0.0373191021066839,0.0371283277078465],"y":["company","revenues","risks","competition","competitive"],"type":"bar","xaxis":"x5","yaxis":"y5"},{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eSHAP Value: %{x:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#EC4899"},"orientation":"h","showlegend":false,"text":["0.056","0.039","0.037","0.035","0.033"],"textfont":{"color":"#94A3B8","size":9},"textposition":"outside","x":[0.0555756065575924,0.0394523135217793,0.0374297811795536,0.0352957843968947,0.033117885918478],"y":["products","company","information","sales","clinical"],"type":"bar","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"xaxis":{"anchor":"y","domain":[0.0,0.25333333333333335],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis":{"anchor":"x","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis2":{"anchor":"y2","domain":[0.37333333333333335,0.6266666666666667],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis2":{"anchor":"x2","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis3":{"anchor":"y3","domain":[0.7466666666666667,1.0],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis3":{"anchor":"x3","domain":[0.575,1.0],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis4":{"anchor":"y4","domain":[0.0,0.25333333333333335],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis4":{"anchor":"x4","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis5":{"anchor":"y5","domain":[0.37333333333333335,0.6266666666666667],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis5":{"anchor":"x5","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"xaxis6":{"anchor":"y6","domain":[0.7466666666666667,1.0],"title":{"font":{"size":10,"color":"#94A3B8"},"text":"SHAP Value"},"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis6":{"anchor":"x6","domain":[0.0,0.425],"tickfont":{"size":9,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"annotations":[{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Environmental Climate","x":0.12666666666666668,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Technology Innovation","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Operational Supply","x":0.8733333333333333,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Financial Liquidity","x":0.12666666666666668,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Competitive Market","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"#F8FAFC"},"showarrow":false,"text":"Cybersecurity","x":0.8733333333333333,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"margin":{"l":20,"r":60,"t":80,"b":40},"font":{"family":"Inter, sans-serif","size":10,"color":"#F8FAFC"},"height":550,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
-            </div>
+  function hitLayer(f, onIndex) {
+    const step = f.iw / (f.years.length - 1);
+    const hit = el("rect", { class: "hit", x: f.m.left - step / 2, y: f.m.top, width: f.iw + step, height: f.ih, tabindex: 0 }, f.svg);
+    let idx = f.years.length - 1;
+    const pick = (clientX) => {
+      const r = f.svg.getBoundingClientRect();
+      const px = ((clientX - r.left) / r.width) * f.width;
+      return Math.max(0, Math.min(f.years.length - 1, Math.round((px - f.m.left) / step)));
+    };
+    hit.addEventListener("pointermove", (e) => { idx = pick(e.clientX); onIndex(idx, e.clientX, e.clientY); });
+    hit.addEventListener("pointerleave", () => { onIndex(-1); });
+    hit.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      idx = Math.max(0, Math.min(f.years.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1)));
+      const r = f.svg.getBoundingClientRect();
+      onIndex(idx, r.left + (f.x(f.years[idx]) / f.width) * r.width, r.top + 24);
+    });
+    hit.addEventListener("focus", () => {
+      const r = f.svg.getBoundingClientRect();
+      onIndex(idx, r.left + (f.x(f.years[idx]) / f.width) * r.width, r.top + 24);
+    });
+    hit.addEventListener("blur", () => onIndex(-1));
+  }
 
-            <div class="insight-box">
-                <div class="insight-title">
-                    Why Explainability Matters
-                </div>
-                <p>
-                    In regulated industries like finance, model decisions must be interpretable.
-                    SHAP values provide legally defensible explanations for each classification,
-                    showing exactly which words influenced the model's decision.
-                </p>
-            </div>
-        </div>
-    </section>
+  /* Figure 2: median length with the middle half shaded */
+  function drawLength() {
+    const box = document.getElementById("length-chart");
+    const f = frame(box, box.clientWidth < 520 ? 240 : 300, 125000, 25000);
+    const d = data.years;
+    const band = d.map((r) => `${f.x(r.year)},${f.y(Math.min(r.p75, 125000))}`).join(" ") + " " +
+      [...d].reverse().map((r) => `${f.x(r.year)},${f.y(r.p25)}`).join(" ");
+    el("polygon", { points: band, fill: "var(--band)" }, f.svg);
+    const refs = [[data.tfidfCap, "TF-IDF limit, 50K"], [data.sbertChars, "Embedding model, 1.4K"]];
+    for (const [v, label] of refs) {
+      el("line", { x1: f.m.left, x2: f.m.left + f.iw, y1: f.y(v), y2: f.y(v), stroke: "var(--ink-2)", "stroke-width": 1, "stroke-opacity": 0.6 }, f.svg);
+      if (f.m.right > 40) el("text", { x: f.m.left + f.iw + 8, y: f.y(v) + 4 }, f.svg).textContent = label;
+    }
+    el("polyline", { points: d.map((r) => `${f.x(r.year)},${f.y(r.median)}`).join(" "), fill: "none", stroke: "var(--series)", "stroke-width": 2, "stroke-linejoin": "round" }, f.svg);
+    const last = d[d.length - 1];
+    el("circle", { cx: f.x(last.year), cy: f.y(last.median), r: 4, fill: "var(--series)", stroke: "var(--paper)", "stroke-width": 2 }, f.svg);
+    if (f.m.right > 40) el("text", { class: "label", x: f.x(last.year) + 10, y: f.y(last.median) + 4 }, f.svg).textContent = `${short(last.median)} median`;
+    const cross = el("line", { y1: f.m.top, y2: f.m.top + f.ih, stroke: "var(--ink-2)", "stroke-width": 1, opacity: 0 }, f.svg);
+    const dot = el("circle", { r: 4, fill: "var(--series)", stroke: "var(--paper)", "stroke-width": 2, opacity: 0 }, f.svg);
+    hitLayer(f, (i, cx, cy) => {
+      if (i < 0) { cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); hideTip(); return; }
+      const r = d[i];
+      cross.setAttribute("x1", f.x(r.year)); cross.setAttribute("x2", f.x(r.year)); cross.setAttribute("opacity", 0.5);
+      dot.setAttribute("cx", f.x(r.year)); dot.setAttribute("cy", f.y(r.median)); dot.setAttribute("opacity", 1);
+      showTip(`<strong>${r.year}</strong>${row("Median", fmt(r.median))}${row("Middle half", `${fmt(r.p25)}–${fmt(r.p75)}`)}${row("Filings", fmt(r.count))}`, cx, cy);
+    });
+  }
 
-    <!-- Semantic Analysis -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Semantic Analysis</div>
-                <h2>Two Similarity Scores</h2>
-                <p>What each one actually measured</p>
-            </div>
+  /* Figure 3: filings per year */
+  function drawCounts() {
+    const box = document.getElementById("count-chart");
+    const f = frame(box, 170, 6000, 2000);
+    const step = f.iw / (f.years.length - 1);
+    const bw = Math.max(4, Math.min(12, step * 0.4));
+    const bars = data.years.map((r) => {
+      const x = f.x(r.year) - bw / 2, top = f.y(r.count), base = f.y(0), rad = Math.min(4, bw / 2);
+      return el("path", {
+        d: `M${x},${base} V${top + rad} Q${x},${top} ${x + rad},${top} H${x + bw - rad} Q${x + bw},${top} ${x + bw},${top + rad} V${base} Z`,
+        fill: "var(--series)",
+      }, f.svg);
+    });
+    hitLayer(f, (i, cx, cy) => {
+      bars.forEach((b, j) => b.setAttribute("opacity", i < 0 || i === j ? 1 : 0.45));
+      if (i < 0) { hideTip(); return; }
+      const r = data.years[i];
+      showTip(`<strong>${r.year}</strong>${row("Filings", fmt(r.count))}`, cx, cy);
+    });
+  }
 
-            <div class="grid-2" style="margin-top: 32px;">
-                <div class="card" style="border-left: 4px solid var(--accent-blue);">
-                    <h3 style="margin-bottom: 16px;">TF-IDF (Lexical)</h3>
-                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-blue);">21.3%</div>
-                    <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Mean TF-IDF cosine between companies, over up to 50,000 characters of each
-                        section, with rare words weighted up.
-                    </p>
-                </div>
-                <div class="card" style="border-left: 4px solid var(--accent-orange);">
-                    <h3 style="margin-bottom: 16px;">SBERT (Semantic)</h3>
-                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-orange);">51.0%</div>
-                    <p style="color: var(--text-secondary); margin-top: 8px;">
-                        Mean SBERT cosine between companies, over only about the first 1,400 characters
-                        of each section (the model's 256-token limit).
-                    </p>
-                </div>
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Why These Can't Be Compared
-                </div>
-                <p>
-                    The two scores read different amounts of text on different scales, so the gap between
-                    them doesn't show that companies say the same things in different words. A check
-                    confirms it: shuffling each section's words, which destroys their meaning, raises the
-                    SBERT mean from 51.0% to 57.9%. The rework measures copying directly instead.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Topic Modeling -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Unsupervised Discovery</div>
-                <h2>Topics Discovered by BERTopic</h2>
-                <p>21 distinct risk themes automatically identified from the corpus</p>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">Discovered Topic Distribution</div>
-                <div>                            <div id="d8ec477f-7aab-4ec8-a8e2-5789e5e34923" class="plotly-graph-div" style="height:450px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("d8ec477f-7aab-4ec8-a8e2-5789e5e34923")) {                    Plotly.newPlot(                        "d8ec477f-7aab-4ec8-a8e2-5789e5e34923",                        [{"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e\u003cbr\u003eDocuments: %{x:,}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":[658,406,299,229,221,193,177,176,140,120],"colorscale":[[0.0,"#440154"],[0.1111111111111111,"#482878"],[0.2222222222222222,"#3e4989"],[0.3333333333333333,"#31688e"],[0.4444444444444444,"#26828e"],[0.5555555555555556,"#1f9e89"],[0.6666666666666666,"#35b779"],[0.7777777777777778,"#6ece58"],[0.8888888888888888,"#b5de2b"],[1.0,"#fde725"]],"showscale":false},"orientation":"h","text":["658 docs","406 docs","299 docs","229 docs","221 docs","193 docs","177 docs","176 docs","140 docs","120 docs"],"textfont":{"color":"#F8FAFC","size":11},"textposition":"outside","x":[658,406,299,229,221,193,177,176,140,120],"y":["General Risk Factors","Stock & Investment","Economic Conditions","Forward-Looking Statements","Clinical\u002fBiotech","Financial Losses","Competition","Real Estate\u002fLoans","Oil & Gas","Trust\u002fShares"],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":20,"r":100,"t":20,"b":50},"font":{"family":"Inter, sans-serif","size":12,"color":"#F8FAFC"},"xaxis":{"title":{"text":"Number of Documents","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.2)"},"yaxis":{"title":{"text":"Discovered Topic","font":{"size":13,"color":"#94A3B8"}},"tickfont":{"size":11,"color":"#94A3B8"},"gridcolor":"rgba(128,128,128,0.1)"},"title":{},"height":450,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"responsive": true}                    )                };                            </script>        </div>
-            </div>
-
-            <div class="insight-box">
-                <div class="insight-title">
-                    Unsupervised Insights
-                </div>
-                <p>
-                    BERTopic discovered <strong>industry-specific risk patterns</strong> (Oil & Gas, Real Estate,
-                    Biotech) that the manual taxonomy doesn't capture. Only 14% of discovered topics
-                    align strongly with predefined categories, revealing new dimensions of risk disclosure.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Methodology -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Methodology</div>
-                <h2>Technical Approach</h2>
-                <p>A comprehensive NLP pipeline combining multiple techniques</p>
-            </div>
-
-            <div class="method-grid">
-                <div class="method-card">
-                    <div class="method-icon">1</div>
-                    <div class="method-title">Text Classification</div>
-                    <div class="method-desc">
-                        TF-IDF vectorization with ensemble of Logistic Regression, SVM,
-                        Random Forest, XGBoost, and LightGBM
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">2</div>
-                    <div class="method-title">Transformers</div>
-                    <div class="method-desc">
-                        Fine-tuned DistilBERT for comparison, demonstrating when
-                        traditional ML outperforms deep learning
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">3</div>
-                    <div class="method-title">Sentence Embeddings</div>
-                    <div class="method-desc">
-                        SBERT (all-MiniLM-L6-v2) for semantic similarity analysis
-                        and boilerplate detection
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">4</div>
-                    <div class="method-title">Topic Modeling</div>
-                    <div class="method-desc">
-                        BERTopic for unsupervised discovery of latent themes
-                        using UMAP + HDBSCAN clustering
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">5</div>
-                    <div class="method-title">Explainability</div>
-                    <div class="method-desc">
-                        SHAP (SHapley Additive exPlanations) for interpretable
-                        feature importance analysis
-                    </div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon">6</div>
-                    <div class="method-title">Visualization</div>
-                    <div class="method-desc">
-                        Interactive Plotly dashboards and comprehensive
-                        matplotlib visualizations
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Skills Demonstrated -->
-    <section style="background: var(--bg-secondary);">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Skills</div>
-                <h2>NLP Competencies Demonstrated</h2>
-            </div>
-
-            <div class="skills-grid">
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Multi-class text classification at scale</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Transformer fine-tuning (DistilBERT)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Sentence embeddings (SBERT)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Unsupervised topic modeling (BERTopic)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Model explainability (SHAP)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Ensemble methods and hyperparameter tuning</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Memory-efficient data processing (PyArrow)</span>
-                </div>
-                <div class="skill-item">
-                    <span class="skill-bullet"></span>
-                    <span>Interactive data visualization (Plotly)</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p style="font-size: 1.25rem; margin-bottom: 16px;">
-                <strong>SEC Risk Factor Intelligence</strong>
-            </p>
-            <p>
-                Built with Python, scikit-learn, Transformers, BERTopic, SHAP, and Plotly<br>
-                <a href="https://github.com/jlattanzi4" target="_blank">View on GitHub</a>
-            </p>
-            <p style="margin-top: 24px; font-size: 0.875rem;">
-                Generated November 09, 2026
-            </p>
-        </div>
-    </footer>
+  drawPages();
+  drawLength();
+  drawCounts();
+  let w = window.innerWidth;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth === w) return;
+    w = window.innerWidth;
+    drawLength();
+    drawCounts();
+  });
+})();
+</script>
 </body>
 </html>

@@ -13,7 +13,7 @@ An end-to-end NLP pipeline analyzing 79,000+ corporate risk disclosures from SEC
 
 ## Interactive Report
 
-**[View the Full Interactive Analysis](https://jlattanzi4.github.io/sec-risk-classifier/report.html)**
+**[Read the report](https://jlattanzi4.github.io/sec-risk-classifier/report.html)**: what the data shows, what the first version got wrong, and what the rework will measure.
 
 ---
 
@@ -53,7 +53,8 @@ sec-risk-classifier/
 │   ├── topic_modeling.py    # BERTopic analysis
 │   ├── model_explainability.py  # SHAP analysis
 │   ├── boilerplate_detection.py # Semantic similarity
-│   └── generate_report.py   # Interactive HTML report
+│   ├── generate_report.py   # Builds docs/report.html from the data
+│   └── report_template.html # The report's page design
 ├── models/                  # Trained model artifacts
 ├── outputs/                 # Visualizations
 ├── docs/report.html         # Interactive analysis report (served by GitHub Pages)
@@ -181,14 +182,12 @@ This project uses the [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edg
 
 ---
 
-## Key Visualizations
+## The Report
 
-The interactive report includes:
-- Model performance comparison across 7 algorithms
-- Risk category distribution analysis
-- Lexical vs semantic similarity comparison
-- Topic discovery and temporal trends
-- SHAP feature importance by category
+`python src/generate_report.py` computes every number on the page from `data/processed/risk_factors_2006_2020.parquet` (and the saved model results) and fills `src/report_template.html`. It shows:
+- How much of each risk section the similarity models actually read, drawn as pages
+- How long Item 1A sections are by year (median and middle half), and how many filings each year has
+- Where each method from the first version stands after the review
 
 ---
 

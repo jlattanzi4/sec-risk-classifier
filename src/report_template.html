@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How much of a risk disclosure is boilerplate?</title>
+<meta name="description" content="%%filings%% Item 1A risk sections from SEC 10-K filings, %%year_min%%–%%year_max%%: how long they are, what a first analysis got wrong, and what comes next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --ink: #1c1e21;
+  --ink-2: #5b6068;
+  --rule: #e4e6e9;
+  --grid: #eef0f2;
+  --sheet: #fbfbfc;
+  --text-line: #cfd3d8;
+  --series: #2a78d6;
+  --band: rgba(42, 120, 214, 0.14);
+  --highlight: #eda100;
+  --redline: #d03b3b;
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: "Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #b4b3ad;
+    --rule: #34342f;
+    --grid: #2a2a27;
+    --sheet: #22221f;
+    --text-line: #4a4a45;
+    --series: #3987e5;
+    --band: rgba(57, 135, 229, 0.2);
+    --highlight: #c98500;
+    --redline: #e66767;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.1875rem/1.6 var(--serif);
+  font-optical-sizing: auto;
+}
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--series); outline-offset: 3px; border-radius: 2px; }
+
+.page { max-width: 58rem; margin: 0 auto; padding: 0 1.5rem 6rem; }
+.prose { max-width: 36rem; }
+.prose p { margin: 0 0 1.1em; }
+
+.masthead {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 1.5rem 0 0; font: 400 0.875rem/1.4 var(--sans); color: var(--ink-2);
+}
+.masthead a { text-decoration: none; }
+.masthead a:hover { color: var(--ink); text-decoration: underline; }
+
+h1 {
+  margin: 5.5rem 0 1.5rem; max-width: 14ch;
+  font: 600 clamp(2.5rem, 6.5vw, 4.25rem)/1.04 var(--serif);
+  letter-spacing: -0.02em;
+}
+h2 {
+  margin: 4.5rem 0 1rem;
+  font: 600 1.5rem/1.25 var(--serif); letter-spacing: -0.01em;
+}
+.lede { font-size: 1.3125rem; line-height: 1.5; }
+
+/* Redline: claims that don't hold are struck, corrections are inserted */
+.review { margin: 2.5rem 0 0; padding: 1.5rem 0 0; border-top: 1px solid var(--rule); }
+.review h2 { margin-top: 0; font-size: 1.125rem; }
+.review ul { list-style: none; margin: 0; padding: 0; }
+.review li { margin: 0 0 1.1rem; }
+del {
+  text-decoration-line: line-through; text-decoration-color: var(--redline);
+  text-decoration-thickness: 2px; color: var(--ink-2);
+}
+ins {
+  text-decoration-line: underline; text-decoration-color: var(--redline);
+  text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+}
+
+figure { margin: 2rem 0 0; }
+figcaption {
+  max-width: 40rem; margin-top: 0.9rem;
+  font: 400 0.875rem/1.5 var(--sans); color: var(--ink-2);
+}
+figcaption b { font-weight: 600; color: var(--ink); }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 0 0 1.25rem;
+  font: 400 0.875rem/1.3 var(--sans); color: var(--ink-2);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.key { width: 1.5rem; height: 0.5rem; border-radius: 2px; }
+.key.read { background: var(--highlight); }
+.key.cap { height: 2px; background: var(--series); }
+.key.unread { background: var(--text-line); opacity: 0.45; }
+
+/* Figure 1: sections drawn as pages */
+.filing { margin: 0 0 1.75rem; }
+.filing-label { margin: 0 0 0.6rem; font: 400 0.9375rem/1.4 var(--sans); }
+.filing-label strong { font-weight: 600; }
+.filing-label .muted { color: var(--ink-2); }
+.sheets { display: flex; flex-wrap: wrap; gap: 5px; }
+.sheet {
+  --pad: 5px;
+  position: relative; width: 28px; height: 37px; padding: var(--pad) 4px;
+  display: flex; flex-direction: column; gap: 1.5px;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 2px;
+}
+.sheet i { display: block; height: 2px; border-radius: 1px; background: var(--text-line); }
+.sheet i.read { height: 2px; background: var(--highlight); box-shadow: 0 0 0 1px var(--highlight); }
+.sheet i.unread { opacity: 0.35; }
+.sheet .cut { position: absolute; left: -4px; right: -4px; height: 2px; background: var(--series); border-radius: 1px; }
+.sheet:hover { border-color: var(--ink-2); }
+
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font: 400 12px var(--sans); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chart text.label { fill: var(--ink); font-weight: 500; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.chart .hit:focus-visible { outline: none; }
+.chart:has(.hit:focus-visible) { outline: 2px solid var(--series); outline-offset: 6px; border-radius: 2px; }
+
+.tooltip {
+  position: fixed; z-index: 10; pointer-events: none; opacity: 0;
+  min-width: 11rem; padding: 0.6rem 0.75rem;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  font: 400 0.8125rem/1.45 var(--sans); font-variant-numeric: tabular-nums;
+}
+.tooltip.on { opacity: 1; }
+.tooltip strong { display: block; margin-bottom: 0.2rem; font-weight: 600; }
+.tooltip div { display: flex; justify-content: space-between; gap: 1rem; color: var(--ink-2); }
+.tooltip div span:last-child { color: var(--ink); }
+
+details { margin: 1.5rem 0 0; font: 400 0.875rem/1.5 var(--sans); }
+summary { cursor: pointer; color: var(--ink-2); width: fit-content; }
+summary:hover { color: var(--ink); }
+
+table { border-collapse: collapse; font: 400 0.875rem/1.4 var(--sans); font-variant-numeric: tabular-nums; }
+th, td { padding: 0.5rem 1.25rem 0.5rem 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; }
+td.num, th.num { text-align: right; padding-right: 0; padding-left: 1.25rem; }
+.numbers { margin-top: 1rem; }
+
+.ledger { width: 100%; max-width: 46rem; margin-top: 1.5rem; }
+.ledger td { padding-top: 0.8rem; padding-bottom: 0.8rem; }
+.ledger td:first-child { width: 30%; font-weight: 500; }
+.ledger del { text-decoration-thickness: 1.5px; }
+.status { display: inline-flex; gap: 0.4rem; align-items: baseline; }
+.status.fails { color: var(--redline); }
+.status.fails::before { content: "✕"; font-size: 0.75em; }
+.status.redo { color: var(--ink-2); }
+.status.redo::before { content: "↻"; font-size: 0.85em; }
+.status + span { display: block; color: var(--ink-2); margin-top: 0.15rem; }
+
+footer {
+  margin-top: 6rem; padding-top: 1.25rem; border-top: 1px solid var(--rule);
+  font: 400 0.8125rem/1.6 var(--sans); color: var(--ink-2);
+}
+footer p { margin: 0 0 0.4rem; max-width: 40rem; }
+
+@media (max-width: 600px) {
+  body { font-size: 1.0625rem; }
+  h1 { margin-top: 3.5rem; }
+  h2 { margin-top: 3.5rem; }
+  .lede { font-size: 1.1875rem; }
+  .sheet { --pad: 4px; width: 24px; height: 32px; gap: 1px; }
+  .ledger td:first-child { width: auto; }
+  .ledger tr { display: grid; grid-template-columns: 1fr; border-bottom: 1px solid var(--rule); }
+  .ledger td { border: 0; padding: 0.25rem 0; }
+  .ledger tr td:first-child { padding-top: 0.9rem; }
+  .ledger tr td:last-child { padding-bottom: 0.9rem; }
+  .ledger thead { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip { transition: opacity 120ms ease; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <a href="https://github.com/jlattanzi4">Joseph Lattanzi</a>
+  <a href="https://github.com/jlattanzi4/sec-risk-classifier">Code on GitHub</a>
+</header>
+
+<main>
+<h1>How much of a risk disclosure is boilerplate?</h1>
+
+<div class="prose">
+  <p class="lede">Every public company files a 10-K with the SEC each year, and its Item 1A lists the risks the company faces. This project reads %%filings%% of those sections, from %%companies%% companies between %%year_min%% and %%year_max%%, and asks how much of each one is written fresh and how much is copied.</p>
+</div>
+
+<section class="review prose" aria-labelledby="review-h">
+  <h2 id="review-h">Under review</h2>
+  <p>A review in November 2026 found that the first version's two headline findings don't hold up. They're struck below, with the reason in their place.</p>
+  <ul>
+    <li><del>Filings are 51% alike in meaning but only 21% alike in wording.</del> <ins>The two similarity scores read different amounts of text, so they can't be compared.</ins></li>
+    <li><del>A TF-IDF ensemble classifies risks with %%f1%% F1.</del> <ins>That score comes from an evaluation where copies of test rows were also in the training set.</ins></li>
+  </ul>
+  <p>A rework is under way in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.</p>
+</section>
+
+<section aria-labelledby="read-h">
+  <h2 id="read-h">What the model actually read</h2>
+  <div class="prose">
+    <p>Both similarity scores compared 200 companies' 2020 filings. The “meaning” score came from a sentence-embedding model that stops after 256 tokens, about the first 1,400 characters of a section. The median risk section ran %%median_y0%% characters in %%year_min%% and %%median_y1%% in %%year_max%%. Drawn as pages, this is how much of it the model saw.</p>
+  </div>
+  <figure>
+    <div class="legend" aria-hidden="true">
+      <span><i class="key read"></i>Read by the embedding model</span>
+      <span><i class="key cap"></i>Where TF-IDF stopped, at 50,000 characters</span>
+      <span><i class="key unread"></i>Read by neither</span>
+    </div>
+    <div id="pages" role="img" aria-label="The median %%year_min%% section is %%pages_y0%% pages and the median %%year_max%% section is %%pages_y1%% pages. The embedding model read about the first half page of each. TF-IDF read the whole %%year_min%% section but stopped two thirds of the way down page 17 of the %%year_max%% section."></div>
+    <figcaption><b>Figure 1.</b> The median Item 1A section in %%year_min%% and %%year_max%%, at about 3,000 characters a page. The embedding model saw %%share_read%% of a typical section.</figcaption>
+  </figure>
+</section>
+
+<section aria-labelledby="length-h">
+  <h2 id="length-h">Risk sections keep getting longer</h2>
+  <div class="prose">
+    <p>The median section grew %%growth%%× between %%year_min%% and %%year_max%%. Across all years it's %%median_all%% characters, and %%share_over_cap%% of sections run past the 50,000 characters TF-IDF read, so even the “wording” score missed the end of many filings.</p>
+  </div>
+  <figure>
+    <div class="chart" id="length-chart"></div>
+    <figcaption><b>Figure 2.</b> Median length of an Item 1A section by filing year, in characters. Shaded: the middle half of filings, from the 25th to the 75th percentile.</figcaption>
+  </figure>
+  <figure>
+    <div class="chart" id="count-chart"></div>
+    <figcaption><b>Figure 3.</b> 10-K filings with an Item 1A section, by filing year.</figcaption>
+  </figure>
+  <details>
+    <summary>Show the numbers</summary>
+    <table class="numbers">
+      <thead><tr><th>Year</th><th class="num">Filings</th><th class="num">Median length</th><th class="num">25th percentile</th><th class="num">75th percentile</th></tr></thead>
+      <tbody>
+%%table_rows%%
+      </tbody>
+    </table>
+  </details>
+</section>
+
+<section aria-labelledby="tried-h">
+  <h2 id="tried-h">What the first version tried</h2>
+  <div class="prose">
+    <p>Each method ran on whole sections, because the step meant to split them into paragraphs didn't split anything. That alone means every result needs redoing; two of them also have problems of their own.</p>
+  </div>
+  <table class="ledger">
+    <thead><tr><th>Method</th><th>What it reported</th><th>Where it stands</th></tr></thead>
+    <tbody>
+      <tr><td>Similarity, TF-IDF vs. sentence embeddings</td><td><del>51% vs. 21%</del></td><td><span class="status fails">Doesn't hold</span><span>Scores computed on different amounts of text</span></td></tr>
+      <tr><td>Classification, TF-IDF ensemble and DistilBERT</td><td><del>%%f1%% F1</del></td><td><span class="status fails">Doesn't hold</span><span>Leaky evaluation; labels came from keyword rules</span></td></tr>
+      <tr><td>Topic modeling, BERTopic</td><td>21 risk themes</td><td><span class="status redo">To redo on sentences</span><span>Ran on whole sections</span></td></tr>
+      <tr><td>Explanations, SHAP</td><td>Top words per risk category</td><td><span class="status redo">To redo</span><span>Explained a separate model, not the ensemble</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="next-h" class="prose">
+  <h2 id="next-h">What comes next</h2>
+  <p>The rework splits each section into sentences and asks a narrower question: how much of a company's risk section is copied, from its peers or from its own previous filing?</p>
+  <p>It will report shares rather than averages: the sentences with a near-verbatim match elsewhere, the ones that are paraphrased, and how much carries over from year to year, with 2020's pandemic disclosures as a natural test. Every number will come with a baseline, like shuffled text and random pairs of filings, so it's clear what counts as high.</p>
+  <p>Follow along in <a href="https://github.com/jlattanzi4/sec-risk-classifier/issues/1">issue #1</a>.</p>
+</section>
+</main>
+
+<footer>
+  <p>Data: <a href="https://huggingface.co/datasets/eloukas/edgar-corpus">EDGAR-CORPUS</a>, 10-K filings %%year_min%%–%%year_max%%, filtered to those with an Item 1A section.</p>
+  <p>Generated %%generated%% from <a href="https://github.com/jlattanzi4/sec-risk-classifier">jlattanzi4/sec-risk-classifier</a>.</p>
+</footer>
+
+</div>
+
+<div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+<script type="application/json" id="report-data">%%data_json%%</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById("report-data").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (n) => n.toLocaleString("en-US");
+  const short = (n) => (n >= 1000 ? `${Math.round(n / 1000)}K` : `${n}`);
+  const tip = document.getElementById("tooltip");
+
+  function showTip(html, x, y) {
+    tip.innerHTML = html;
+    tip.classList.add("on");
+    const r = tip.getBoundingClientRect();
+    const left = Math.min(Math.max(8, x + 14), window.innerWidth - r.width - 8);
+    const top = y - r.height - 14 < 8 ? y + 18 : y - r.height - 14;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+  const hideTip = () => tip.classList.remove("on");
+  const row = (k, v) => `<div><span>${k}</span><span>${v}</span></div>`;
+
+  function el(name, attrs = {}, parent) {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  /* Figure 1: each median section drawn as pages */
+  function drawPages() {
+    const root = document.getElementById("pages");
+    const { charsPerPage, sbertChars, tfidfCap } = data;
+    const LINES = 9;
+    for (const f of data.pageRows) {
+      const block = document.createElement("div");
+      block.className = "filing";
+      block.innerHTML = `<p class="filing-label"><strong>${f.year}</strong> <span class="muted">median section, ${fmt(f.chars)} characters, about ${f.pages.toFixed(1)} pages</span></p>`;
+      const sheets = document.createElement("div");
+      sheets.className = "sheets";
+      const n = Math.ceil(f.chars / charsPerPage);
+      for (let p = 0; p < n; p++) {
+        const start = p * charsPerPage;
+        const end = Math.min(f.chars, start + charsPerPage);
+        const sheet = document.createElement("div");
+        sheet.className = "sheet";
+        const lines = Math.max(1, Math.round(((end - start) / charsPerPage) * LINES));
+        for (let l = 0; l < lines; l++) {
+          const at = start + (l / LINES) * charsPerPage;
+          const line = document.createElement("i");
+          line.style.width = `${[100, 92, 97, 88, 100, 95, 84, 99, 70][l]}%`;
+          if (at < sbertChars) line.className = "read";
+          else if (at >= tfidfCap) line.className = "unread";
+          sheet.appendChild(line);
+        }
+        if (start < tfidfCap && tfidfCap < end) {
+          const cut = document.createElement("span");
+          cut.className = "cut";
+          cut.style.top = `calc(var(--pad) + ${(tfidfCap - start) / charsPerPage} * (100% - 2 * var(--pad)))`;
+          sheet.appendChild(cut);
+        }
+        const read = start < sbertChars ? " Includes everything the embedding model read." : start >= tfidfCap ? " Past TF-IDF's limit." : "";
+        sheet.addEventListener("pointermove", (e) =>
+          showTip(`<strong>Page ${p + 1}</strong>${row("Characters", `${fmt(start + 1)}–${fmt(end)}`)}${read ? `<div><span>${read.trim()}</span></div>` : ""}`, e.clientX, e.clientY));
+        sheet.addEventListener("pointerleave", hideTip);
+        sheets.appendChild(sheet);
+      }
+      block.appendChild(sheets);
+      root.appendChild(block);
+    }
+  }
+
+  /* Shared axis frame for figures 2 and 3 */
+  function frame(container, height, yMax, yStep) {
+    container.innerHTML = "";
+    const width = container.clientWidth;
+    const m = { top: 12, right: width < 520 ? 12 : 120, bottom: 28, left: 44 };
+    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, height, "aria-hidden": "true" }, container);
+    const years = data.years.map((d) => d.year);
+    const x0 = years[0], x1 = years[years.length - 1];
+    const iw = width - m.left - m.right, ih = height - m.top - m.bottom;
+    const x = (yr) => m.left + ((yr - x0) / (x1 - x0)) * iw;
+    const y = (v) => m.top + ih - (v / yMax) * ih;
+    for (let v = 0; v <= yMax + 1; v += yStep) {
+      el("line", { x1: m.left, x2: m.left + iw, y1: y(v), y2: y(v), stroke: v === 0 ? "var(--ink-2)" : "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: m.left - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = short(v);
+    }
+    const every = width < 520 ? 4 : 2;
+    years.forEach((yr, i) => {
+      if (i % every === 0 || i === years.length - 1) el("text", { x: x(yr), y: m.top + ih + 18, "text-anchor": "middle" }, svg).textContent = yr;
+    });
+    return { svg, x, y, m, iw, ih, width, years };
+  }
+
+  function hitLayer(f, onIndex) {
+    const step = f.iw / (f.years.length - 1);
+    const hit = el("rect", { class: "hit", x: f.m.left - step / 2, y: f.m.top, width: f.iw + step, height: f.ih, tabindex: 0 }, f.svg);
+    let idx = f.years.length - 1;
+    const pick = (clientX) => {
+      const r = f.svg.getBoundingClientRect();
+      const px = ((clientX - r.left) / r.width) * f.width;
+      return Math.max(0, Math.min(f.years.length - 1, Math.round((px - f.m.left) / step)));
+    };
+    hit.addEventListener("pointermove", (e) => { idx = pick(e.clientX); onIndex(idx, e.clientX, e.clientY); });
+    hit.addEventListener("pointerleave", () => { onIndex(-1); });
+    hit.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      idx = Math.max(0, Math.min(f.years.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1)));
+      const r = f.svg.getBoundingClientRect();
+      onIndex(idx, r.left + (f.x(f.years[idx]) / f.width) * r.width, r.top + 24);
+    });
+    hit.addEventListener("focus", () => {
+      const r = f.svg.getBoundingClientRect();
+      onIndex(idx, r.left + (f.x(f.years[idx]) / f.width) * r.width, r.top + 24);
+    });
+    hit.addEventListener("blur", () => onIndex(-1));
+  }
+
+  /* Figure 2: median length with the middle half shaded */
+  function drawLength() {
+    const box = document.getElementById("length-chart");
+    const f = frame(box, box.clientWidth < 520 ? 240 : 300, 125000, 25000);
+    const d = data.years;
+    const band = d.map((r) => `${f.x(r.year)},${f.y(Math.min(r.p75, 125000))}`).join(" ") + " " +
+      [...d].reverse().map((r) => `${f.x(r.year)},${f.y(r.p25)}`).join(" ");
+    el("polygon", { points: band, fill: "var(--band)" }, f.svg);
+    const refs = [[data.tfidfCap, "TF-IDF limit, 50K"], [data.sbertChars, "Embedding model, 1.4K"]];
+    for (const [v, label] of refs) {
+      el("line", { x1: f.m.left, x2: f.m.left + f.iw, y1: f.y(v), y2: f.y(v), stroke: "var(--ink-2)", "stroke-width": 1, "stroke-opacity": 0.6 }, f.svg);
+      if (f.m.right > 40) el("text", { x: f.m.left + f.iw + 8, y: f.y(v) + 4 }, f.svg).textContent = label;
+    }
+    el("polyline", { points: d.map((r) => `${f.x(r.year)},${f.y(r.median)}`).join(" "), fill: "none", stroke: "var(--series)", "stroke-width": 2, "stroke-linejoin": "round" }, f.svg);
+    const last = d[d.length - 1];
+    el("circle", { cx: f.x(last.year), cy: f.y(last.median), r: 4, fill: "var(--series)", stroke: "var(--paper)", "stroke-width": 2 }, f.svg);
+    if (f.m.right > 40) el("text", { class: "label", x: f.x(last.year) + 10, y: f.y(last.median) + 4 }, f.svg).textContent = `${short(last.median)} median`;
+    const cross = el("line", { y1: f.m.top, y2: f.m.top + f.ih, stroke: "var(--ink-2)", "stroke-width": 1, opacity: 0 }, f.svg);
+    const dot = el("circle", { r: 4, fill: "var(--series)", stroke: "var(--paper)", "stroke-width": 2, opacity: 0 }, f.svg);
+    hitLayer(f, (i, cx, cy) => {
+      if (i < 0) { cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); hideTip(); return; }
+      const r = d[i];
+      cross.setAttribute("x1", f.x(r.year)); cross.setAttribute("x2", f.x(r.year)); cross.setAttribute("opacity", 0.5);
+      dot.setAttribute("cx", f.x(r.year)); dot.setAttribute("cy", f.y(r.median)); dot.setAttribute("opacity", 1);
+      showTip(`<strong>${r.year}</strong>${row("Median", fmt(r.median))}${row("Middle half", `${fmt(r.p25)}–${fmt(r.p75)}`)}${row("Filings", fmt(r.count))}`, cx, cy);
+    });
+  }
+
+  /* Figure 3: filings per year */
+  function drawCounts() {
+    const box = document.getElementById("count-chart");
+    const f = frame(box, 170, 6000, 2000);
+    const step = f.iw / (f.years.length - 1);
+    const bw = Math.max(4, Math.min(12, step * 0.4));
+    const bars = data.years.map((r) => {
+      const x = f.x(r.year) - bw / 2, top = f.y(r.count), base = f.y(0), rad = Math.min(4, bw / 2);
+      return el("path", {
+        d: `M${x},${base} V${top + rad} Q${x},${top} ${x + rad},${top} H${x + bw - rad} Q${x + bw},${top} ${x + bw},${top + rad} V${base} Z`,
+        fill: "var(--series)",
+      }, f.svg);
+    });
+    hitLayer(f, (i, cx, cy) => {
+      bars.forEach((b, j) => b.setAttribute("opacity", i < 0 || i === j ? 1 : 0.45));
+      if (i < 0) { hideTip(); return; }
+      const r = data.years[i];
+      showTip(`<strong>${r.year}</strong>${row("Filings", fmt(r.count))}`, cx, cy);
+    });
+  }
+
+  drawPages();
+  drawLength();
+  drawCounts();
+  let w = window.innerWidth;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth === w) return;
+    w = window.innerWidth;
+    drawLength();
+    drawCounts();
+  });
+})();
+</script>
+</body>
+</html>
