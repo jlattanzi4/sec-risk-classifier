@@ -37,7 +37,7 @@ def main() -> None:
     rows = []
     for name in CANDIDATES:
         embedder = load_embedder(name)
-        embedder.encode(corpus[:256])                       # load weights and warm up
+        embedder.encode(corpus[:256])  # load weights and warm up
         start = time.perf_counter()
         embedder.encode(corpus)
         per_second = SPEED_SAMPLE / (time.perf_counter() - start)
@@ -48,7 +48,9 @@ def main() -> None:
         is_paraphrase = (pairs["kind"] == "paraphrase").to_numpy()
 
         def precision(negative: str | None, cosine=cosine, is_paraphrase=is_paraphrase) -> float:
-            keep = is_paraphrase | (pairs["kind"] == negative).to_numpy() if negative else slice(None)
+            keep = (
+                is_paraphrase | (pairs["kind"] == negative).to_numpy() if negative else slice(None)
+            )
             return float(average_precision_score(is_paraphrase[keep], cosine[keep]))
 
         rows.append(
@@ -70,7 +72,9 @@ def main() -> None:
         del embedder
 
     best = max(r["ap"] for r in rows)
-    chosen = max((r for r in rows if r["ap"] >= best - 0.005), key=lambda r: r["sentences_per_second"])
+    chosen = max(
+        (r for r in rows if r["ap"] >= best - 0.005), key=lambda r: r["sentences_per_second"]
+    )
     out = {
         "n_pairs": {k: int(v) for k, v in pairs["kind"].value_counts().items()},
         "speed_sample": SPEED_SAMPLE,
@@ -81,7 +85,9 @@ def main() -> None:
     (cfg.results_dir / "embedders.json").write_text(json.dumps(out, indent=1) + "\n")
 
     print(f"tuning pairs: {out['n_pairs']}")
-    print(f"{'model':<42}{'AP':>7}{'vs easy':>9}{'vs hard':>9}{'para':>7}{'hard':>7}{'easy':>7}{'sent/s':>9}{'cut off':>9}")
+    print(
+        f"{'model':<42}{'AP':>7}{'vs easy':>9}{'vs hard':>9}{'para':>7}{'hard':>7}{'easy':>7}{'sent/s':>9}{'cut off':>9}"
+    )
     for r in rows:
         m = r["median_cos"]
         print(

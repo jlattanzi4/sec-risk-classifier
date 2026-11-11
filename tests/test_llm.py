@@ -17,8 +17,15 @@ def runner(tmp_path, call, **kwargs):
     prompt = tmp_path / "prompt_v1.md"
     prompt.write_text("Label each item.")
     return run_batches(
-        ITEMS, prompt_file=prompt, out_dir=tmp_path / "raw", model="haiku", batch_size=2,
-        required=("label",), call=call, concurrency=1, **kwargs,
+        ITEMS,
+        prompt_file=prompt,
+        out_dir=tmp_path / "raw",
+        model="haiku",
+        batch_size=2,
+        required=("label",),
+        call=call,
+        concurrency=1,
+        **kwargs,
     )
 
 
@@ -31,7 +38,7 @@ def test_a_good_reply_is_saved_and_returned(tmp_path):
 
     out = runner(tmp_path, call)
     assert [o["id"] for o in out] == ["s0", "s1", "s2", "s3", "s4"]
-    assert calls == ["haiku"] * 3                                   # 5 items in batches of 2
+    assert calls == ["haiku"] * 3  # 5 items in batches of 2
     request = json.loads((tmp_path / "raw/batch_000.request.json").read_text())
     assert request["ids"] == ["s0", "s1"] and request["model"] == "haiku"
     assert "Label each item." in request["prompt"] and "sentence 1" in request["prompt"]
@@ -39,15 +46,23 @@ def test_a_good_reply_is_saved_and_returned(tmp_path):
     assert response["duration_ms"] == 12 and "s0" in response["result"]
 
 
-@pytest.mark.parametrize("bad", [
-    "I could not do this.",                                         # not JSON
-    json.dumps([{"id": "s0", "label": "same"}]),                    # an id is missing
-    json.dumps([{"id": "s0", "label": "same"}, {"id": "s1", "label": "same"},
-                {"id": "s9", "label": "same"}]),                    # an id nobody asked for
-    json.dumps([{"id": "s0", "label": "same"}, {"id": "s1"}]),      # a required key is missing
-    json.dumps([{"id": "s0", "label": "same"}, {"id": "s0", "label": "same"}]),   # an id twice
-    json.dumps({"id": "s0", "label": "same"}),                      # not an array
-])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "I could not do this.",  # not JSON
+        json.dumps([{"id": "s0", "label": "same"}]),  # an id is missing
+        json.dumps(
+            [
+                {"id": "s0", "label": "same"},
+                {"id": "s1", "label": "same"},
+                {"id": "s9", "label": "same"},
+            ]
+        ),  # an id nobody asked for
+        json.dumps([{"id": "s0", "label": "same"}, {"id": "s1"}]),  # a required key is missing
+        json.dumps([{"id": "s0", "label": "same"}, {"id": "s0", "label": "same"}]),  # an id twice
+        json.dumps({"id": "s0", "label": "same"}),  # not an array
+    ],
+)
 def test_a_bad_reply_is_retried_then_left_for_the_next_run(tmp_path, bad):
     attempts = []
 
@@ -58,8 +73,8 @@ def test_a_bad_reply_is_retried_then_left_for_the_next_run(tmp_path, bad):
         return {"result": bad if first_batch else good_reply(prompt)}
 
     out = runner(tmp_path, call, max_retries=2)
-    assert len(attempts) == 3                                       # one try and two retries
-    assert [o["id"] for o in out] == ["s2", "s3", "s4"]             # the other batches still count
+    assert len(attempts) == 3  # one try and two retries
+    assert [o["id"] for o in out] == ["s2", "s3", "s4"]  # the other batches still count
     assert not (tmp_path / "raw/batch_000.response.json").exists()
     assert (tmp_path / "raw/batch_001.response.json").exists()
 
@@ -93,8 +108,16 @@ def test_saved_batches_for_other_items_are_refused(tmp_path):
     prompt = tmp_path / "prompt_v1.md"
     other = [{"id": f"x{i}", "text": "t"} for i in range(5)]
     with pytest.raises(LLMError, match="different items"):
-        run_batches(other, prompt_file=prompt, out_dir=tmp_path / "raw", model="haiku", batch_size=2,
-                    required=("label",), call=lambda p, m: {"result": "[]"}, concurrency=1)
+        run_batches(
+            other,
+            prompt_file=prompt,
+            out_dir=tmp_path / "raw",
+            model="haiku",
+            batch_size=2,
+            required=("label",),
+            call=lambda p, m: {"result": "[]"},
+            concurrency=1,
+        )
 
 
 def test_a_failed_call_stops_the_run(tmp_path):
@@ -125,11 +148,19 @@ def test_only_the_reply_and_how_it_was_made_are_kept():
     from pipeline.llm import public_record
 
     raw = {
-        "result": "[]", "stop_reason": "end_turn", "duration_ms": 900, "is_error": False,
-        "session_id": "abc", "uuid": "def", "credential_expires_at": "2026-12-01", "total_cost_usd": 0.01,
+        "result": "[]",
+        "stop_reason": "end_turn",
+        "duration_ms": 900,
+        "is_error": False,
+        "session_id": "abc",
+        "uuid": "def",
+        "credential_expires_at": "2026-12-01",
+        "total_cost_usd": 0.01,
         "modelUsage": {"claude-haiku-5-5": {"inputTokens": 10, "outputTokens": 5, "costUSD": 0.01}},
     }
     assert public_record(raw) == {
-        "result": "[]", "stop_reason": "end_turn", "duration_ms": 900,
+        "result": "[]",
+        "stop_reason": "end_turn",
+        "duration_ms": 900,
         "models": {"claude-haiku-5-5": {"input_tokens": 10, "output_tokens": 5}},
     }

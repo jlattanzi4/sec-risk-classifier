@@ -60,7 +60,7 @@ def claude_cli(prompt: str, model: str, timeout: int = 900) -> dict:
             text=True,
             cwd=empty,
             timeout=timeout,
-            check=False,   # a failure is reported below, with what the CLI printed
+            check=False,  # a failure is reported below, with what the CLI printed
         )
     if proc.returncode != 0:
         raise LLMError(f"claude exited {proc.returncode}: {(proc.stderr or proc.stdout)[-500:]}")

@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 K = 5
-_MULTIPLIER = 0x9E3779B97F4A7C15     # odd, so multiplying by it mod 2**64 loses nothing
+_MULTIPLIER = 0x9E3779B97F4A7C15  # odd, so multiplying by it mod 2**64 loses nothing
 _MASK = 2**64 - 1
 _P = np.uint64(_MULTIPLIER)
 
@@ -116,9 +116,7 @@ def shingle_hashes(norms: Sequence[str], k: int = K) -> tuple[np.ndarray, np.nda
     return hashes, starts.astype(np.int64)
 
 
-def minhash(
-    hashes: np.ndarray, starts: np.ndarray, n_perm: int = 126, seed: int = 0
-) -> np.ndarray:
+def minhash(hashes: np.ndarray, starts: np.ndarray, n_perm: int = 126, seed: int = 0) -> np.ndarray:
     """MinHash signatures, one row per sentence (`uint32`, `n_perm` columns).
 
     The share of positions where two rows agree estimates the Jaccard of their

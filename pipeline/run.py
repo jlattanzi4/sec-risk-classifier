@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 
 from pipeline.candidates import build_candidates, summarize_candidates
 from pipeline.config import load_config
+from pipeline.embed import MODEL, build_embeddings, build_similarity
 from pipeline.industry import SIC_DIVISIONS
 from pipeline.known_answer import build_known_answer, summarize_known_answer
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
@@ -104,12 +105,27 @@ def _known_answer(cfg, args) -> None:
     print(summarize_known_answer(pd.read_csv(path)))
 
 
+def _embeddings(cfg, args) -> None:
+    print(f"embedding with {MODEL} (finished years are skipped)")
+    path = build_embeddings(cfg, force=args.force)
+    files = sorted(path.glob("year=*.npy"))
+    megabytes = sum(f.stat().st_size for f in files) / 1e6
+    print(f"wrote {path.relative_to(cfg.root)}/: {len(files)} years, {megabytes:,.0f} MB")
+
+
+def _similarity(cfg, args) -> None:
+    path = build_similarity(cfg, force=args.force)
+    print(f"wrote {path.relative_to(cfg.root)}/")
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
     "sentences": _sentences,
     "candidates": _candidates,
     "known-answer": _known_answer,
+    "embeddings": _embeddings,
+    "similarity": _similarity,
 }
 
 

@@ -18,7 +18,7 @@ def test_rows_come_back_in_input_order_whatever_the_lengths():
     stub = Stub()
     texts = ["ccc", "a", "eeeee", "bb"]
     out = Embedder(stub, "stub").encode(texts)
-    assert stub.seen == ["eeeee", "ccc", "bb", "a"]              # longest first, so batches pad little
+    assert stub.seen == ["eeeee", "ccc", "bb", "a"]  # longest first, so batches pad little
     expected = np.array([[len(t), 1.0] for t in texts])
     expected /= np.linalg.norm(expected, axis=1, keepdims=True)
     np.testing.assert_allclose(out, expected, rtol=1e-6)

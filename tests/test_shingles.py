@@ -76,9 +76,9 @@ def test_best_matches_with_nothing_to_match():
 
 def test_shingle_hashes_are_equal_for_equal_windows():
     hashes, starts = shingle_hashes(["a b c d e f", "x a b c d e", "a b"])
-    assert starts.tolist() == [0, 2, 4]            # 2 shingles, 2 shingles, then 1
+    assert starts.tolist() == [0, 2, 4]  # 2 shingles, 2 shingles, then 1
     assert len(hashes) == 5
-    assert hashes[0] == hashes[3]                  # "a b c d e" in both
+    assert hashes[0] == hashes[3]  # "a b c d e" in both
     assert len(set(hashes.tolist())) == 4
 
 
@@ -88,8 +88,13 @@ def test_shingle_hashes_do_not_depend_on_the_process():
         "print(shingle_hashes(['we may not be able to protect our rights', 'we may fail'])[0].tolist())"
     )
     outs = {
-        subprocess.run([sys.executable, "-c", code], env={"PYTHONHASHSEED": seed, "PATH": ""},
-                       capture_output=True, text=True, check=True).stdout
+        subprocess.run(
+            [sys.executable, "-c", code],
+            env={"PYTHONHASHSEED": seed, "PATH": ""},
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
         for seed in ("1", "2")
     }
     assert len(outs) == 1
@@ -99,7 +104,7 @@ def test_minhash_estimates_jaccard():
     rng = random.Random(0)
     base = random_sentences(2000, seed=3, words=(15, 40))
     edited = []
-    for s in base:                                  # change a few words so Jaccard spreads over 0–1
+    for s in base:  # change a few words so Jaccard spreads over 0–1
         words = s.split()
         for _ in range(rng.randint(0, 6)):
             words[rng.randrange(len(words))] = rng.choice(VOCAB)
@@ -107,9 +112,9 @@ def test_minhash_estimates_jaccard():
     sig = minhash(*shingle_hashes(base + edited))
     estimate = (sig[:2000] == sig[2000:]).mean(axis=1)
     exact = np.array([jaccard(shingles(a), shingles(b)) for a, b in zip(base, edited, strict=True)])
-    assert exact.std() > 0.2                        # the pairs really do cover the range
+    assert exact.std() > 0.2  # the pairs really do cover the range
     error = estimate - exact
-    assert abs(error.mean()) < 0.01                 # no bias
+    assert abs(error.mean()) < 0.01  # no bias
     # 126 positions give a standard error of sqrt(J(1-J)/126), about 0.045 at J = 0.5.
     assert abs(error).mean() < 0.04
     assert abs(error).max() < 0.2
@@ -119,7 +124,7 @@ def test_lsh_finds_planted_near_duplicates():
     sentences = random_sentences(5000, seed=4, words=(15, 40))
     rng = random.Random(1)
     planted = []
-    for q in range(0, 400, 2):                      # 200 planted pairs: q+1 is q with one word changed
+    for q in range(0, 400, 2):  # 200 planted pairs: q+1 is q with one word changed
         words = sentences[q].split()
         words[rng.randrange(len(words))] = "changed"
         sentences[q + 1] = " ".join(words)
@@ -130,4 +135,6 @@ def test_lsh_finds_planted_near_duplicates():
     found = lsh_candidates(sig, np.array(planted))
     hits = sum((q + 1) in set(c.tolist()) for q, c in zip(planted, found, strict=True))
     assert hits / len(planted) >= 0.95
-    assert all(q not in set(c.tolist()) for q, c in zip(planted, found, strict=True))   # never itself
+    assert all(
+        q not in set(c.tolist()) for q, c in zip(planted, found, strict=True)
+    )  # never itself
