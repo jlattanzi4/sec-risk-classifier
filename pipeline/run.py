@@ -15,6 +15,7 @@ from pipeline.config import load_config
 from pipeline.embed import MODEL, build_embeddings, build_similarity
 from pipeline.industry import SIC_DIVISIONS
 from pipeline.known_answer import build_known_answer, summarize_known_answer
+from pipeline.peers import build_peers
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
 
 
@@ -118,6 +119,18 @@ def _similarity(cfg, args) -> None:
     print(f"wrote {path.relative_to(cfg.root)}/")
 
 
+def _peers(cfg, args) -> None:
+    path = build_peers(cfg, force=args.force)
+    groups = pd.read_parquet(cfg.interim_dir / "filer_groups.parquet")
+    sizes = groups.groupby(["filing_year", "group"]).size()
+    print(f"wrote {path.relative_to(cfg.root)}/ and filer_groups.parquet")
+    print(
+        f"{len(groups):,} filings in {len(sizes):,} groups; "
+        f"{int(sizes[sizes > 1].sum()):,} filings are in a group of two or more; "
+        f"largest group {int(sizes.max())}"
+    )
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
@@ -126,6 +139,7 @@ STAGES = {
     "known-answer": _known_answer,
     "embeddings": _embeddings,
     "similarity": _similarity,
+    "peers": _peers,
 }
 
 
