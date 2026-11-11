@@ -1,0 +1,56 @@
+{
+ "n_pairs": {
+  "different_hard": 300,
+  "different_easy": 300,
+  "paraphrase": 299
+ },
+ "speed_sample": 10000,
+ "candidates": [
+  {
+   "model": "sentence-transformers/all-MiniLM-L6-v2",
+   "ap": 0.35629489471519127,
+   "ap_vs_easy": 0.9998773267450565,
+   "ap_vs_hard": 0.3563254264260437,
+   "median_cos": {
+    "paraphrase": 0.8669899702072144,
+    "different_hard": 0.9430471658706665,
+    "different_easy": 0.20181038975715637
+   },
+   "sentences_per_second": 1767.2075985989509,
+   "over_token_limit": 0.0004,
+   "max_tokens": 256,
+   "dim": 384
+  },
+  {
+   "model": "BAAI/bge-small-en-v1.5",
+   "ap": 0.4468120214245504,
+   "ap_vs_easy": 1.0,
+   "ap_vs_hard": 0.4468120214245504,
+   "median_cos": {
+    "paraphrase": 0.9167109727859497,
+    "different_hard": 0.924069881439209,
+    "different_easy": 0.5406866073608398
+   },
+   "sentences_per_second": 884.6546304205112,
+   "over_token_limit": 0.0,
+   "max_tokens": 512,
+   "dim": 384
+  },
+  {
+   "model": "minishlab/potion-base-8M",
+   "ap": 0.31768340762754804,
+   "ap_vs_easy": 0.9967916918665455,
+   "ap_vs_hard": 0.318493841441304,
+   "median_cos": {
+    "paraphrase": 0.830218493938446,
+    "different_hard": 0.9672214388847351,
+    "different_easy": 0.2580512762069702
+   },
+   "sentences_per_second": 43975.25294735064,
+   "over_token_limit": 0.0,
+   "max_tokens": null,
+   "dim": 256
+  }
+ ],
+ "chosen": "BAAI/bge-small-en-v1.5"
+}
