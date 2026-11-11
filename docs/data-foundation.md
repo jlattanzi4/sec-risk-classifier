@@ -97,25 +97,25 @@ The sections are plain text extracted from HTML. A newline usually ends a paragr
 
 ### Choosing the splitter
 
-Three candidates, on the 15 test cases in `tests/test_sentences.py` and on 50 sections sampled with `random_state=0` (3.6 MB of text):
+Three candidates, on the 16 test cases in `tests/test_sentences.py` and on 50 sections sampled with `random_state=0` (3.6 MB of text):
 
 | Splitter | Cases passed | Sentences per section | Over 1,500 characters | Under 40 characters | MB/s | Full corpus, 8 workers |
 |---|---|---|---|---|---|---|
-| Naive regex (split after `.!?` before a capital) | 10/15 | 416.7 | 0.00% | 8.2% | 44.98 | 10 s |
-| pysbd 0.3.4 | 11/15 | 416.7 | 0.00% | 7.8% | 0.42 | 18 min |
-| `pipeline.sentences` (used) | 15/15 | 388.2 | 0.01% | 2.8% | 30.54 | 15 s |
+| Naive regex (split after `.!?` before a capital) | 11/16 | 416.7 | 0.00% | 8.2% | 42.00 | 11 s |
+| pysbd 0.3.4 | 12/16 | 416.7 | 0.00% | 7.8% | 0.42 | 18 min |
+| `pipeline.sentences` (used) | 16/16 | 388.4 | 0.01% | 2.8% | 30.17 | 15 s |
 
-The case count alone would be a rigged contest: all three pass the 8 cases the plan started with, and the other 7 were added from failures seen in the real text while this splitter was being written, so it passes them by construction. The fair test is where the two serious candidates disagree on text neither was tuned on.
+The case count alone would be a rigged contest: all three pass the 8 cases the plan started with, and the other 8 were added from failures seen in the real text while this splitter was being written, so it passes them by construction. The fair test is where the two serious candidates disagree on text neither was tuned on.
 
-Run on the same stitched paragraphs, pysbd and `pipeline.sentences` split 98.0% of 7,737 paragraphs identically. They differ at 309 boundaries: 293 that only pysbd makes and 16 that only this splitter makes. A random 80 of those (seed 0) were read and judged one by one; the judgments are in [`docs/reviews/splitter_disagreements.csv`](reviews/splitter_disagreements.csv):
+Run on the same stitched paragraphs, pysbd and `pipeline.sentences` split 98.1% of 7,737 paragraphs identically. They differ at 298 boundaries: 282 that only pysbd makes and 16 that only this splitter makes. A random 80 of those (seed 0) were read and judged one by one; the judgments are in [`docs/reviews/splitter_disagreements.csv`](reviews/splitter_disagreements.csv):
 
 | Who was right | Disagreements |
 |---|---|
-| `pipeline.sentences` | 74 |
-| pysbd | 3 |
+| `pipeline.sentences` | 73 |
+| pysbd | 4 |
 | Either reading is fine | 3 |
 
-Nearly all of pysbd's extra boundaries fall inside a sentence: before an enumerated clause ("...the earlier of ‖ (i) the completion..."), after a cross-reference ("see Item 7. ‖ Management's Discussion..."), or after an abbreviation ("A.M. ‖ Best ratings"). This project keeps a sentence with its enumerated clauses whole on purpose, because a sentence is the unit a company keeps, edits or drops. The three pysbd wins are real misses here: a sentence ending in "Inc." before a word that isn't a common opener, "Yahoo! Inc.", and a sentence that ends on "Item 1."
+Nearly all of pysbd's extra boundaries fall inside a sentence: before an enumerated clause ("...the earlier of ‖ (i) the completion..."), after a cross-reference ("see Item 7. ‖ Management's Discussion..."), or after an abbreviation ("A.M. ‖ Best ratings"). This project keeps a sentence with its enumerated clauses whole on purpose, because a sentence is the unit a company keeps, edits or drops. The four pysbd wins are real misses here: two sentences ending in "Ltd." before "Mr. Williams" (a word this splitter doesn't treat as a sentence opener), and two places where the source text itself is garbled around the period.
 
 Who judged: Claude, during the build session, reading each context. Joe didn't hand-label them. The file is committed so anyone can disagree with a specific row.
 
@@ -124,3 +124,40 @@ Who judged: Claude, during the build session, reading each context. Joe didn't h
 A segment is dropped as debris when it has fewer than 15 letters or when letters are under half of its non-space characters (table rows, page numbers, stray list markers). Sentences over 1,500 characters are kept and flagged `is_long`.
 
 For matching, each sentence also gets a normalized form: Unicode NFKC, lower case, every digit replaced by `0`, every other character outside `a-z` replaced by a space, whitespace collapsed. "Revenue fell 12.5% in 2019." and "Revenue fell 14.0% in 2020!" normalize to the same string, so a sentence whose only change is its numbers counts as carried over. `norm_hash` is the first 8 bytes of the BLAKE2b hash of that string, as a signed 64-bit integer.
+
+### The sentence table
+
+```
+uv run python -m pipeline.run sentences --workers 8   # data/interim/sentences/year=YYYY.parquet
+uv run python -m scripts.review_sentences             # the sample that was read
+```
+
+| | |
+|---|---|
+| Sentences | 21,348,790, in 15 yearly files (2.5 GB on disk, zstd) |
+| Build time | 198 s on 8 cores |
+| Filings with no sentences | 0 of 72,613 |
+| Sentences per filing | median 243; 10th percentile 86, 90th 569 |
+| Characters per sentence | median 161; 10th percentile 71, 90th 302 |
+| Dropped as debris | 227,644 of 21,576,434 segments (1.1%) |
+| Flagged long (over 1,500 characters) | 1,585 (0.01%) |
+| Over 600 characters | 101,718 (0.48%) |
+| Headings | 321,192 (1.5%) |
+
+Columns: `cik`, `filing_year`, `sent_idx` (position among kept sentences), `para_idx` (position of its paragraph, so a section can be rebuilt with its paragraph breaks), `text`, `norm`, `norm_hash`, `n_chars`, `is_long`, `is_heading`. Each yearly file also records, in its metadata, how many filings and segments went in and how many segments were debris.
+
+### Reading the output
+
+The first 20 sentences of 50 filings (sampled with `random_state=0`) were read, 1,000 sentences in all. The per-filing notes are in [`docs/reviews/sentence_review.csv`](reviews/sentence_review.csv).
+
+- **Boundary errors: 2**, each leaving two fragments where there should be one sentence (4 of 1,000 sentences, 0.4%). One is a line wrapped before a capitalized word ("...under the Senior" / "Secured Notes due 2018..."), which the stitching rules leave alone because a capital after a line break usually does start something new. The other is "Yahoo! Inc."
+- **Fixed during the review: 1.** A sentence ending "...in Item 8." was being glued to the next one. A reference to an item now runs on only when the item's title follows it ("Item 7. Management's Discussion..."). The table above is from the rebuild after that fix, and the filing was reread.
+- **Limit of this check.** Each sentence was read as its first 58 and last 32 characters, which is where splitting errors show. A missed boundary in the middle of a long sentence would not be seen this way; the 0.48% of sentences over 600 characters is the upper bound on where those could hide.
+
+Who read them: Claude, during the build session. Joe didn't hand-check them.
+
+### Headings
+
+`is_heading` is kept, with a narrower meaning than the plan hoped for. It marks a line that has no end punctuation and isn't a list item: section headings ("Risks Related to Our Business") and captions written without a full stop. In the 50 filings every flagged line was a heading (no wrong flags), so the column is safe to use for setting those lines aside.
+
+It does not find risk-factor captions that end in a period, which is how most filers write them ("We depend on a small number of customers." on a line of its own, followed by the paragraph that explains it). Those are ordinary sentences here. In the 2015 file, 55.8% of paragraphs hold a single sentence, so "a one-sentence paragraph" is a usable signal for captions if a later milestone needs one, and `para_idx` is there to compute it.

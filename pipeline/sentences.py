@@ -46,6 +46,12 @@ _SENTENCE_OPENERS = frozenset(
     "another even though once upon without within among between over except "
     "failure changes if".split()
 )
+# First words of the titles of a 10-K's items ("Item 7. Management's Discussion...").
+_ITEM_TITLE_WORDS = frozenset(
+    "business risk unresolved properties legal mine market selected management quantitative "
+    "financial changes controls other directors executive security certain principal "
+    "exhibits form reserved".split()
+)
 # Words a complete line never ends on; a line ending in one continues on the next.
 _DANGLING = frozenset(
     "the of and or to in a an by for with as that our its their on at from is are be "
@@ -145,7 +151,10 @@ def _is_boundary(paragraph: str, match: re.Match) -> bool:
     if token_start == 0 and _LIST_MARKER.match(token):
         return False  # "1. Our ability to borrow": a list number, not a sentence
     if _ITEM_REFERENCE.search(paragraph, max(0, match.start() - 10), match.start()):
-        return False  # "see Item 7. Management's Discussion": a cross-reference and its title
+        # "see Item 7. Management's Discussion": a cross-reference runs into the
+        # item's title. Any other word after "Item 7." starts a new sentence.
+        following = _NEXT_WORD.match(paragraph, match.end())
+        return not (following and following.group(1).lower() in _ITEM_TITLE_WORDS)
     if lowered in _MAYBE_END or _ACRONYM.match(token):
         following = _NEXT_WORD.match(paragraph, match.end())
         return bool(following) and following.group(1).lower() in _SENTENCE_OPENERS
@@ -196,7 +205,11 @@ def norm_hash(norm: str) -> int:
 
 def filing_sentences(cik: int, filing_year: int, text: str) -> pd.DataFrame:
     """One row per kept sentence of a filing; debris is dropped before numbering."""
-    kept = [s for s in segment(text) if not is_debris(s.text)]
+    return sentence_frame(cik, filing_year, [s for s in segment(text) if not is_debris(s.text)])
+
+
+def sentence_frame(cik: int, filing_year: int, kept: list[Segment]) -> pd.DataFrame:
+    """The sentence table for one filing, from segments that already passed the debris rule."""
     norms = [normalize(s.text) for s in kept]
     df = pd.DataFrame(
         {
@@ -219,6 +232,8 @@ def filing_sentences(cik: int, filing_year: int, text: str) -> pd.DataFrame:
             "filing_year": "int64",
             "sent_idx": "int64",
             "para_idx": "int64",
+            "text": "str",
+            "norm": "str",
             "norm_hash": "int64",
             "n_chars": "int64",
             "is_long": "bool",

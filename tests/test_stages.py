@@ -8,8 +8,9 @@ import pytest
 from pipeline import stages
 from pipeline.config import Config
 from pipeline.industry import SUBMISSIONS_URL
-from pipeline.run import summarize_filings
-from pipeline.stages import build_filings
+from pipeline.run import summarize_filings, summarize_sentences
+from pipeline.sentences import SENTENCE_COLUMNS
+from pipeline.stages import build_filings, build_sentences, sentence_stats
 
 FILINGS_COLUMNS = [
     "cik",
@@ -146,3 +147,67 @@ def test_summary_reports_the_gate_share():
     assert "dated by an original 10-K (unique or multiple): 50.0%" in text
     assert "with a SIC division: 75.0%" in text
     assert "  D  Manufacturing" in text
+
+
+SENTENCE_TEXTS = [
+    ("320193", 2019, "Risks Related to Our Business\nWe depend on a small number of customers."),
+    ("320193", 2020, "We depend on a small number of customers. Demand for our products may fall."),
+    ("0001018724", 2020, ""),
+    ("1606163", 2020, "2019 2018 2017 $ 1,234 $ 5,678\nOur insurance may not cover every loss."),
+]
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_build_sentences_on_fixture(cfg, workers):
+    write_corpus(cfg, SENTENCE_TEXTS)
+    out_dir = build_sentences(cfg, workers=workers)
+
+    assert out_dir == cfg.interim_dir / "sentences"
+    files = sorted(p.name for p in out_dir.iterdir())
+    assert files == ["year=2019.parquet", "year=2020.parquet"]
+
+    df = pd.concat(pd.read_parquet(out_dir / name) for name in files)
+    assert list(df.columns) == SENTENCE_COLUMNS
+    assert not df.duplicated(["cik", "filing_year", "sent_idx"]).any()
+    assert df["cik"].dtype == "int64"
+    # The empty filing contributes no rows; the table row is dropped as debris.
+    assert 1018724 not in set(df["cik"])
+    assert df[df["cik"] == 1606163]["text"].tolist() == ["Our insurance may not cover every loss."]
+    # The same sentence a year apart shares a hash: the join milestone 2 is built on.
+    carried = df[df["text"] == "We depend on a small number of customers."]
+    assert carried["filing_year"].tolist() == [2019, 2020]
+    assert carried["norm_hash"].nunique() == 1
+
+    stats = sentence_stats(out_dir)
+    assert stats.loc[2020].to_dict() == {"filings": 3, "segments": 4, "debris": 1, "sentences": 3}
+    assert stats.loc[2019].to_dict() == {"filings": 1, "segments": 2, "debris": 0, "sentences": 2}
+
+    modified = {name: (out_dir / name).stat().st_mtime_ns for name in files}
+    build_sentences(cfg, workers=workers)
+    assert modified == {name: (out_dir / name).stat().st_mtime_ns for name in files}
+    build_sentences(cfg, workers=workers, force=True)
+    assert all((out_dir / name).stat().st_mtime_ns > modified[name] for name in files)
+
+
+def test_sentence_summary_reports_the_checks(cfg):
+    write_corpus(cfg, SENTENCE_TEXTS)
+    text = summarize_sentences(build_sentences(cfg, workers=1), n_filings=4)
+    assert "sentences: 5" in text
+    assert "filings with no sentences: 1 of 4" in text
+    assert "dropped as debris: 1 of 6 segments (16.7%)" in text
+    assert "headings: 1 (20.0%)" in text
+
+
+def test_a_year_with_no_sentences_still_gets_its_file(cfg):
+    # Otherwise every rerun would redo that year, and a reader would think it was missing.
+    write_corpus(cfg, [("320193", 2019, ""), ("320193", 2020, "Not applicable.")])
+    out_dir = build_sentences(cfg, workers=1)
+    for year in (2019, 2020):
+        df = pd.read_parquet(out_dir / f"year={year}.parquet")
+        assert list(df.columns) == SENTENCE_COLUMNS and len(df) == 0
+    assert sentence_stats(out_dir).loc[2020].to_dict() == {
+        "filings": 1,
+        "segments": 1,
+        "debris": 1,
+        "sentences": 0,
+    }

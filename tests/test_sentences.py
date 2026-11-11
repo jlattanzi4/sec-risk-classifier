@@ -85,6 +85,20 @@ SPLIT_CASES = [
         ],
     ),
     (
+        # ...but only when a title follows. Otherwise "Item 8." just ends the sentence.
+        (
+            "See Note B to the financial statements in Item 8. FERC has the authority to impose "
+            "penalties. See the description of energy supply in Item 1. Con Edison also depends "
+            "on wholesale markets."
+        ),
+        [
+            "See Note B to the financial statements in Item 8.",
+            "FERC has the authority to impose penalties.",
+            "See the description of energy supply in Item 1.",
+            "Con Edison also depends on wholesale markets.",
+        ],
+    ),
+    (
         "The Shares trade from 9:30 a.m. to 4:00 p.m. Eastern Time on Textron Inc.’s venue.",
         ["The Shares trade from 9:30 a.m. to 4:00 p.m. Eastern Time on Textron Inc.’s venue."],
     ),
