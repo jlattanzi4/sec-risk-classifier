@@ -20,6 +20,7 @@ from pipeline.judging import judge_with_haiku, sample_real_pairs, write_judge_in
 from pipeline.known_answer import build_known_answer, summarize_known_answer
 from pipeline.labels import build_filing_metrics, build_labels
 from pipeline.peers import build_peers
+from pipeline.report_data import build_baselines, build_measure_results
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
 from pipeline.thresholds import build_thresholds, read_thresholds
 
@@ -201,6 +202,17 @@ def _labels(cfg, args) -> None:
     )
 
 
+def _baselines(cfg, args) -> None:
+    path = build_baselines(cfg)
+    print(f"wrote {path.relative_to(cfg.root)}")
+    print(json.dumps(json.loads(path.read_text()), indent=1))
+
+
+def _measure_report(cfg, args) -> None:
+    path = build_measure_results(cfg)
+    print(f"wrote {path.relative_to(cfg.root)} ({path.stat().st_size / 1e3:,.0f} KB)")
+
+
 def _peers(cfg, args) -> None:
     path = build_peers(cfg, force=args.force)
     groups = pd.read_parquet(cfg.interim_dir / "filer_groups.parquet")
@@ -226,6 +238,8 @@ STAGES = {
     "peers": _peers,
     "thresholds": _thresholds,
     "labels": _labels,
+    "baselines": _baselines,
+    "measure-report": _measure_report,
 }
 
 
