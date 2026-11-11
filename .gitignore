@@ -52,3 +52,7 @@ outputs/*.html
 
 # Keep report.html for GitHub Pages
 !report.html
+
+# Pipeline downloads and intermediate files (rebuilt by `python -m pipeline.run`)
+data/interim/
+data/raw/edgar/
