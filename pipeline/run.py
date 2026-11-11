@@ -4,9 +4,11 @@ Stages run in the order given. `all` runs every stage in pipeline order.
 """
 
 import argparse
+import json
 import time
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
@@ -16,8 +18,10 @@ from pipeline.embed import MODEL, build_embeddings, build_similarity
 from pipeline.industry import SIC_DIVISIONS
 from pipeline.judging import judge_with_haiku, sample_real_pairs, write_judge_inputs
 from pipeline.known_answer import build_known_answer, summarize_known_answer
+from pipeline.labels import build_filing_metrics, build_labels
 from pipeline.peers import build_peers
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
+from pipeline.thresholds import build_thresholds, read_thresholds
 
 
 def summarize_filings(df: pd.DataFrame) -> str:
@@ -139,6 +143,64 @@ def _judge(cfg, args) -> None:
     print(labels["label"].value_counts().to_string())
 
 
+def _thresholds(cfg, args) -> None:
+    path = build_thresholds(cfg)
+    saved = json.loads(path.read_text())
+    print(f"wrote {path.relative_to(cfg.root)}")
+    print(f"tau_v = {saved['tau_v']:.3f} (F1 {saved['f1_v']:.3f} on the tuning half)")
+    print(f"tau_p = {saved['tau_p']:.3f} (F1 {saved['f1_p']:.3f} on the tuning half)")
+    known = saved["known_answer"]
+    print(f"held-out half ({known['n']} pairs), how each kind was labeled:")
+    for kind, counts in known["labeled"].items():
+        print(f"  {kind:<16}" + "".join(f"{tier} {n:>4}   " for tier, n in counts.items()))
+    carried = known["carried_over"]
+    for name in ("precision", "precision_without_hard", "recall"):
+        share = carried[name]
+        print(
+            f"  carried over, {name}: {share['value']:.3f} ({share['low']:.3f}-{share['high']:.3f})"
+        )
+    if "real_pairs" in saved:
+        real = saved["real_pairs"]
+        agree = real["agreement"]
+        print(
+            f"judges on {agree['n']} shared pairs: kappa {agree['kappa']:.3f} "
+            f"(carried over or not: {agree['kappa_carried']:.3f}), agreement {agree['agreement']:.1%}"
+        )
+        print(f"real pairs, by {real['basis']} ({real['n']} pairs):")
+        for tier in ("near", "paraphrase", "new"):
+            row = real["makeup"][tier]
+            print(
+                f"  {tier:<11}same {row['same']:.1%}  paraphrase {row['paraphrase']:.1%}  "
+                f"different {row['different']:.1%}  ({row['n']} pairs for {row['stands_for']:,.0f})"
+            )
+        print(f"  recall of carried-over pairs: {real['makeup']['recall_carried']:.1%}")
+
+
+def _labels(cfg, args) -> None:
+    tau_v, tau_p = read_thresholds(cfg)
+    build_labels(cfg, tau_v, tau_p)
+    metrics = pd.read_parquet(build_filing_metrics(cfg))
+    print(f"labeled with tau_v = {tau_v:.3f}, tau_p = {tau_p:.3f}; {len(metrics):,} paired filings")
+    shares = [
+        "share_exact",
+        "share_near",
+        "share_paraphrase",
+        "share_new",
+        "share_removed",
+        "share_peer",
+    ]
+    weighted = {
+        s: np.average(
+            metrics[s], weights=metrics["n_prev" if s == "share_removed" else "n_sentences"]
+        )
+        for s in shares
+    }
+    print("pooled over sentences: " + "  ".join(f"{s[6:]} {v:.1%}" for s, v in weighted.items()))
+    print(
+        "median filing:         " + "  ".join(f"{s[6:]} {metrics[s].median():.1%}" for s in shares)
+    )
+
+
 def _peers(cfg, args) -> None:
     path = build_peers(cfg, force=args.force)
     groups = pd.read_parquet(cfg.interim_dir / "filer_groups.parquet")
@@ -162,6 +224,8 @@ STAGES = {
     "judge-sample": _judge_sample,
     "judge": _judge,
     "peers": _peers,
+    "thresholds": _thresholds,
+    "labels": _labels,
 }
 
 

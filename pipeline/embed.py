@@ -179,13 +179,44 @@ def _by_company(ciks: np.ndarray) -> dict[int, np.ndarray]:
     return pd.Series(np.arange(len(ciks))).groupby(ciks).indices
 
 
+Leftover = tuple[np.ndarray, np.ndarray]  # row numbers in a candidates table, and their vectors
+
+
+def cosine_columns(
+    df: pd.DataFrame, cur: Leftover, prev: Leftover
+) -> tuple[np.ndarray, np.ndarray]:
+    """`best_cos` and `cos_idx` for every row of a candidates table.
+
+    `cur` and `prev` give, for each side, the rows exact matching left over
+    and their vectors. Within each company, every leftover sentence gets its
+    highest cosine against the other side's leftovers and that sentence's
+    `sent_idx`. Other rows, and rows with nothing to compare with, get NaN
+    and -1.
+    """
+    ciks, sent_idx = df["cik"].to_numpy(), df["sent_idx"].to_numpy()
+    best_cos = np.full(len(df), np.nan)
+    cos_idx = np.full(len(df), -1, dtype=np.int64)
+    (cur_rows, cur_vectors), (prev_rows, prev_vectors) = cur, prev
+    prev_of = _by_company(ciks[prev_rows])
+    for cik, cur_at in _by_company(ciks[cur_rows]).items():
+        prev_at = prev_of.get(cik)
+        if prev_at is None:
+            continue  # last year's filing has nothing left over to compare with
+        for rows, at, vectors, other_rows, other_at, other_vectors in (
+            (cur_rows, cur_at, cur_vectors, prev_rows, prev_at, prev_vectors),
+            (prev_rows, prev_at, prev_vectors, cur_rows, cur_at, cur_vectors),
+        ):
+            scores, where = best_cosine(vectors[at], other_vectors[other_at])
+            best_cos[rows[at]] = scores
+            cos_idx[rows[at]] = sent_idx[other_rows[other_at]][where]
+    return best_cos, cos_idx
+
+
 def build_similarity(cfg: Config, force: bool = False) -> Path:
     """Add the best cosine to every sentence exact matching left over.
 
     Writes `similarity/pair=YYYY.parquet`: the candidates' rows and columns
-    plus `best_cos` and `cos_idx`, the highest cosine against the other
-    filing's leftover sentences and that sentence's `sent_idx` (NaN and -1 for
-    exact matches and where the other filing has nothing left over).
+    plus `best_cos` and `cos_idx` (see `cosine_columns`).
     """
     out_dir = cfg.interim_dir / "similarity"
     for path in sorted((cfg.interim_dir / "candidates").glob("pair=*.parquet")):
@@ -194,23 +225,8 @@ def build_similarity(cfg: Config, force: bool = False) -> Path:
             continue
         year = int(path.stem.split("=")[1])
         df = pd.read_parquet(path)
-        ciks, sent_idx = df["cik"].to_numpy(), df["sent_idx"].to_numpy()
-        best_cos = np.full(len(df), np.nan)
-        cos_idx = np.full(len(df), -1, dtype=np.int64)
-
-        cur_rows, cur_vectors = _leftover(cfg, df, "cur", year)
-        prev_rows, prev_vectors = _leftover(cfg, df, "prev", year - 1)
-        prev_of = _by_company(ciks[prev_rows])
-        for cik, cur_at in _by_company(ciks[cur_rows]).items():
-            prev_at = prev_of.get(cik)
-            if prev_at is None:
-                continue  # last year's filing has nothing left over to compare with
-            for rows, at, vectors, other_rows, other_at, other_vectors in (
-                (cur_rows, cur_at, cur_vectors, prev_rows, prev_at, prev_vectors),
-                (prev_rows, prev_at, prev_vectors, cur_rows, cur_at, cur_vectors),
-            ):
-                scores, where = best_cosine(vectors[at], other_vectors[other_at])
-                best_cos[rows[at]] = scores
-                cos_idx[rows[at]] = sent_idx[other_rows[other_at]][where]
+        best_cos, cos_idx = cosine_columns(
+            df, _leftover(cfg, df, "cur", year), _leftover(cfg, df, "prev", year - 1)
+        )
         write_parquet(df.assign(best_cos=best_cos, cos_idx=cos_idx), out)
     return out_dir

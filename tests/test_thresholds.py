@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -119,3 +120,78 @@ def test_tier_makeup_weights_the_sample_back_to_the_population():
     assert makeup["near"]["n"] == 2 and makeup["near"]["stands_for"] == 40
     # Of everything the judges called carried over (30 + 5), all of it was found.
     assert makeup["recall_carried"] == pytest.approx(1.0)
+
+
+# --- the real pairs: which labels count ---------------------------------------------------------
+
+from pipeline.thresholds import bootstrap_makeup, evaluate_real
+
+
+def write_real_pairs(cfg, judge2):
+    """Eight pairs in two cells; judge 1 labels all, judge 2 the four listed."""
+    folder = cfg.validation_dir / "real_pairs"
+    folder.mkdir(parents=True)
+    pairs = pd.DataFrame(
+        {
+            "id": [f"rp{i}" for i in range(8)],
+            "stratum": ["hi"] * 4 + ["lo"] * 4,
+            "pair_j": [0.8] * 4 + [0.0] * 4,
+            "pair_cos": [0.99] * 4 + [0.5] * 4,
+            "weight": [10.0] * 4 + [100.0] * 4,
+        }
+    )
+    pairs.to_csv(folder / "pairs.csv", index=False)
+    judge1 = [
+        "same",
+        "same",
+        "same",
+        "different",
+        "different",
+        "different",
+        "different",
+        "paraphrase",
+    ]
+    pd.DataFrame({"id": pairs["id"], "label": judge1}).to_csv(
+        folder / "judge1_labels.csv", index=False
+    )
+    pd.DataFrame({"id": list(judge2), "label": list(judge2.values())}).to_csv(
+        folder / "judge2_labels.csv", index=False
+    )
+
+
+def test_when_the_judges_agree_judge_one_s_labels_are_used_for_every_pair(cfg):
+    write_real_pairs(
+        cfg, {"rp0": "same", "rp3": "different", "rp4": "different", "rp7": "paraphrase"}
+    )
+    result = evaluate_real(cfg, tau_v=0.3, tau_p=0.9, n_boot=20)
+    assert result["agreement"]["kappa"] == 1.0 and result["agreement"]["n"] == 4
+    assert result["basis"] == "judge 1 on all pairs" and result["n"] == 8
+    assert result["makeup"]["near"]["same"] == pytest.approx(0.75)
+
+
+def test_when_they_do_not_only_pairs_they_agree_on_are_used_and_reweighted(cfg):
+    write_real_pairs(cfg, {"rp0": "different", "rp1": "same", "rp4": "same", "rp5": "different"})
+    result = evaluate_real(cfg, tau_v=0.3, tau_p=0.9, n_boot=20)
+    assert result["agreement"]["kappa"] < 0.7
+    assert result["basis"] == "pairs both judges agree on" and result["n"] == 2
+    # rp1 now stands for its whole cell of 40, and rp5 for its cell of 400.
+    assert result["makeup"]["near"]["stands_for"] == pytest.approx(40)
+    assert result["makeup"]["new"]["stands_for"] == pytest.approx(400)
+
+
+def test_bootstrap_intervals_bracket_the_estimate():
+    rng = np.random.default_rng(0)
+    n = 400
+    pairs = pd.DataFrame(
+        {
+            "stratum": np.repeat(["a", "b"], n // 2),
+            "pair_j": np.repeat([0.8, 0.0], n // 2),
+            "pair_cos": 0.5,
+            "weight": np.repeat([1.0, 5.0], n // 2),
+            "label": np.where(rng.random(n) < 0.8, "same", "different"),
+        }
+    )
+    intervals = bootstrap_makeup(pairs, tau_v=0.3, tau_p=0.9, n=200, seed=0)
+    point = tier_makeup(pairs, 0.3, 0.9)["near"]["same"]
+    low, high = intervals["near"]["same"]
+    assert low < point < high and high - low < 0.25

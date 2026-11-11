@@ -15,6 +15,7 @@ import pandas as pd
 
 from pipeline.config import Config
 from pipeline.embed import Embedder, load_embedder
+from pipeline.judging import agreement
 from pipeline.sentences import normalize
 from pipeline.shingles import jaccard, shingles
 
@@ -184,9 +185,152 @@ def score_known_answer(cfg: Config, embedder: Embedder | None = None) -> pd.Data
     return pairs
 
 
+def load_real_pairs(cfg: Config) -> pd.DataFrame:
+    """The sampled real pairs with each judge's label (`label_1`, `label_2`; missing where
+    a judge didn't label the pair)."""
+    folder = cfg.validation_dir / "real_pairs"
+    pairs = pd.read_csv(folder / "pairs.csv")
+    for judge in (1, 2):
+        path = folder / f"judge{judge}_labels.csv"
+        labels = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["id", "label"])
+        labels = labels.rename(columns={"label": f"label_{judge}"})
+        pairs = pairs.merge(labels[["id", f"label_{judge}"]], on="id", how="left")
+    return pairs
+
+
+def _reweighted(subset: pd.DataFrame, pairs: pd.DataFrame) -> pd.DataFrame:
+    """`subset` of the sampled pairs, with weights that again add up to each cell's population."""
+    population = pairs.groupby("stratum")["weight"].sum()
+    count = subset.groupby("stratum").size()
+    return subset.assign(weight=subset["stratum"].map(population / count))
+
+
+def bootstrap_makeup(
+    pairs: pd.DataFrame, tau_v: float, tau_p: float, n: int = 1000, seed: int = 0
+) -> dict:
+    """95% intervals for `tier_makeup`, resampling pairs within each sampling cell."""
+    rng = np.random.default_rng(seed)
+    cells = [cell for _, cell in pairs.groupby("stratum")]
+    draws: dict[tuple, list[float]] = {}
+    for _ in range(n):
+        resample = pd.concat(cell.iloc[rng.integers(0, len(cell), len(cell))] for cell in cells)
+        makeup = tier_makeup(resample, tau_v, tau_p)
+        for tier in TIERS:
+            for label in JUDGE_LABELS:
+                draws.setdefault((tier, label), []).append(makeup[tier][label])
+            carried = makeup[tier]["same"] + makeup[tier]["paraphrase"]
+            draws.setdefault((tier, "carried"), []).append(carried)
+        draws.setdefault(("recall_carried",), []).append(makeup["recall_carried"])
+    out: dict = {tier: {} for tier in TIERS}
+    for key, values in draws.items():
+        seen = np.array(values)[~np.isnan(values)]  # a tier can be empty in a resample
+        low, high = np.quantile(seen, [0.025, 0.975]) if len(seen) else (np.nan, np.nan)
+        if len(key) == 1:
+            out[key[0]] = (float(low), float(high))
+        else:
+            out[key[0]][key[1]] = (float(low), float(high))
+    return out
+
+
+def evaluate_real(cfg: Config, tau_v: float, tau_p: float, n_boot: int = 1000) -> dict:
+    """The matcher against the judged real pairs.
+
+    The rule, fixed in the plan: if the two judges' three-label kappa on the
+    pairs both labeled is at least GOOD_KAPPA, judge 1's labels stand for
+    every pair; otherwise only pairs the two agree on are used. Either way
+    the weighted makeup of each tier is reported with bootstrap intervals,
+    and the other views are kept beside it for comparison.
+    """
+    pairs = load_real_pairs(cfg)
+    both = pairs[pairs["label_1"].notna() & pairs["label_2"].notna()]
+    agree = agreement(both["label_1"], both["label_2"])
+    views = {
+        "judge 1 on all pairs": pairs[pairs["label_1"].notna()].assign(
+            label=lambda d: d["label_1"]
+        ),
+        "judge 2 on its subset": _reweighted(both.assign(label=both["label_2"]), pairs),
+        "pairs both judges agree on": _reweighted(
+            both[both["label_1"] == both["label_2"]].assign(label=lambda d: d["label_1"]), pairs
+        ),
+    }
+    basis = "judge 1 on all pairs" if agree["kappa"] >= GOOD_KAPPA else "pairs both judges agree on"
+    chosen = views[basis]
+    return {
+        "agreement": agree,
+        "good_kappa": GOOD_KAPPA,
+        "basis": basis,
+        "n": len(chosen),
+        "makeup": tier_makeup(chosen, tau_v, tau_p),
+        "intervals": bootstrap_makeup(chosen, tau_v, tau_p, n=n_boot),
+        "other_views": {
+            name: tier_makeup(view, tau_v, tau_p) | {"n_pairs": len(view)}
+            for name, view in views.items()
+            if name != basis and len(view)
+        },
+        "labels": {
+            "judge_1": {k: int(v) for k, v in pairs["label_1"].value_counts().items()},
+            "judge_2": {k: int(v) for k, v in pairs["label_2"].value_counts().items()},
+        },
+        "curve_tau_p": [
+            {"tau_p": float(t), **_curve_point(chosen, tau_v, float(t))}
+            for t in np.round(np.arange(0.60, 1.0001, 0.01), 2)
+        ],
+        "curve_tau_v": [
+            {"tau_v": float(t), **_curve_point(chosen, float(t), tau_p)}
+            for t in np.round(np.arange(0.05, 1.0001, 0.05), 2)
+        ],
+    }
+
+
+def _curve_point(pairs: pd.DataFrame, tau_v: float, tau_p: float) -> dict:
+    """Weighted precision of the carried-over call and its recall at one pair of thresholds."""
+    tier = predict(pairs["pair_j"], pairs["pair_cos"], tau_v, tau_p)
+    weight, carried = pairs["weight"], pairs["label"] != "different"
+    called = tier != "new"
+    return {
+        "precision": float(weight[called & carried].sum() / weight[called].sum())
+        if called.any()
+        else float("nan"),
+        "recall": float(weight[called & carried].sum() / weight[carried].sum()),
+        "share_called": float(weight[called].sum() / weight.sum()),
+    }
+
+
+def build_thresholds(cfg: Config, embedder: Embedder | None = None) -> Path:
+    """Tune on the tuning half, evaluate on the other half and the real pairs, and save.
+
+    Writes `results/thresholds.json` and `results/known_answer_scores.csv`
+    (each known-answer pair's Jaccard and cosine, for the charts).
+    """
+    scores = score_known_answer(cfg, embedder)
+    found = tune(scores)
+    tau_v, tau_p = found["tau_v"], found["tau_p"]
+    out = {
+        **found,
+        "tuned_on": {
+            k: int(v) for k, v in scores[scores["split"] == "tune"]["kind"].value_counts().items()
+        },
+        "known_answer": evaluate_known(scores, tau_v, tau_p),
+        "score_summary": {
+            kind: {
+                "j": [float(q) for q in np.quantile(part["j"], [0.1, 0.5, 0.9])],
+                "cos": [float(q) for q in np.quantile(part["cos"], [0.1, 0.5, 0.9])],
+            }
+            for kind, part in scores.groupby("kind")
+        },
+    }
+    if (cfg.validation_dir / "real_pairs" / "judge1_labels.csv").exists():
+        out["real_pairs"] = evaluate_real(cfg, tau_v, tau_p)
+    cfg.results_dir.mkdir(exist_ok=True)
+    columns = ["id", "kind", "split", "j", "cos"]
+    scores[columns].round(4).to_csv(cfg.results_dir / "known_answer_scores.csv", index=False)
+    results_path(cfg).write_text(json.dumps(out, indent=1) + "\n")
+    return results_path(cfg)
+
+
 def read_thresholds(cfg: Config) -> tuple[float, float]:
     """(`tau_v`, `tau_p`) as last tuned."""
-    saved = json.loads((cfg.results_dir / "thresholds.json").read_text())
+    saved = json.loads(results_path(cfg).read_text())
     return saved["tau_v"], saved["tau_p"]
 
 
