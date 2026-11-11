@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-09-copying-rework-design.md`
 
+> **Changed during the build (2026-11-10):** Task 5's gate failed, and a check on COVID mentions showed the corpus year is the year reported on, not the year filed. Filing dates now come from SEC's submissions archive, matched on period of report (`read_ten_k_filings` and `match_filing_dates` in `pipeline/filings.py`); the form-index code from Task 3 was removed. Tasks 3 and 5 below are kept as written for the record. Evidence: `docs/data-foundation.md`.
+
 ## Global Constraints
 
 - Python 3.12 via uv; dependencies pinned in `uv.lock`.

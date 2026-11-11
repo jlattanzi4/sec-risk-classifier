@@ -1,6 +1,6 @@
 # Rework design: how much of a 10-K risk section is boilerplate?
 
-Ticket: [#1](https://github.com/jlattanzi4/sec-risk-classifier/issues/1). Status: draft for Joe's approval, 2026-11-09.
+Ticket: [#1](https://github.com/jlattanzi4/sec-risk-classifier/issues/1). Status: approved 2026-11-09. Revised 2026-11-10 after milestone 1 found that the corpus year is the year reported on, not the year filed (see `docs/data-foundation.md`); the Data and Layer 3 sections changed.
 
 ## Intent
 
@@ -8,7 +8,7 @@ The first version of this project made two headline claims that a review in Nove
 
 The project is a portfolio piece. Its readers are hiring managers and senior data scientists skimming Joe's GitHub. It should leave them thinking: this person can measure something messy, prove the measurement works, and tell what's real from what isn't. The outcomes have to be real (every number computed, validated, and reproducible from one command) and the work should show professional data science skills, including some Joe is growing into, applied to a question that matters.
 
-It matters because regulators asked it. The SEC's 2020 amendments to Regulation S-K Item 105 responded to risk-factor sections that had grown long and generic: they require a summary when the section runs past 15 pages and push generic risks to the end. This dataset ends just before those rules took effect.
+It matters because regulators asked it. The SEC's 2020 amendments to Regulation S-K Item 105 responded to risk-factor sections that had grown long and generic: they require a summary when the section runs past 15 pages and push generic risks to the end. The dataset's last year, reports on fiscal 2020, was mostly filed after those rules took effect on 2020-11-09.
 
 ## The central question
 
@@ -32,7 +32,7 @@ Answered in three layers, each building on the one before and each showing a dif
 **Non-goals**
 - Classification of risks into categories, DistilBERT, SHAP, and BERTopic. They're dropped (see "Old code" below).
 - Predicting stock returns from disclosure changes (the "Lazy Prices" idea). It needs price data and a ticker mapping this project doesn't have; a possible follow-up, not this rework.
-- Covering filings after 2020.
+- Covering reports on fiscal years after 2020.
 
 **Anti-goals** (failure even if it technically works)
 - A metric that isn't validated, or a number shown without its baseline.
@@ -42,11 +42,11 @@ Answered in three layers, each building on the one before and each showing a dif
 
 ## Data
 
-**Have:** `data/processed/risk_factors_2006_2020.parquet`, 72,613 filings from 13,970 companies with the full Item 1A text (`section_1A`), `cik`, `filing_year`, `filename` (`{cik}_{year}.htm`), `item_1a_length`. One filing per company-year. 47,643 filings (66%) have the same company's previous-year filing present; 6,413 companies have five or more years.
+**Have:** `data/processed/risk_factors_2006_2020.parquet`, 72,613 filings from 13,970 companies with the full Item 1A text (`section_1A`), `cik`, `filing_year`, `filename` (`{cik}_{year}.htm`), `item_1a_length`. One filing per company-year. `filing_year` is the calendar year the report's fiscal period ended in, not the year it was filed: a report on 2019 is usually filed in early 2020. 47,643 filings (66%) have the same company's previous-year filing present; 6,413 companies have five or more years.
 
 **Need from SEC EDGAR** (free; SEC's fair-access policy requires a User-Agent with a contact and at most 10 requests a second; the contact is Joe's, read from `SEC_USER_AGENT` in the git-ignored `.env`, never written into code; cache everything under `data/raw/edgar/`, git-ignored):
-- **Filing dates:** the quarterly form indexes (`full-index/{year}/QTR{n}/form.idx`, about 60 files) give each 10-K's filing date. Join on CIK and year; resolve 10-K/A and multiple-filing cases by taking the original 10-K.
-- **Industry:** SIC codes per CIK, from the SEC submissions data. Use SIC divisions (about 10 groups) as the industry level.
+- **Filing dates:** SEC's bulk submissions archive lists each 10-K's filing date and period of report. Join on CIK and the year the period of report ends in; resolve 10-K/A and multiple-filing cases by taking the earliest original 10-K and flagging the row. (The first plan, joining the quarterly form indexes on the year filed, matched 92% of rows and dated most of them to the previous year's report.)
+- **Industry:** SIC codes per CIK, from the same archive. Use SIC divisions (about 10 groups) as the industry level.
 
 **Unit of analysis: the sentence.** The text has newlines and table remnants; a naive splitter finds about 177 sentences per section (median 148 characters). Scale is roughly 20–25 million sentences.
 - Pick a splitter by checking candidates against 50 hand-reviewed sections.
@@ -85,7 +85,7 @@ Answered in three layers, each building on the one before and each showing a dif
 
 ## Layer 2: explain
 
-**Survival of risk sentences.** Link each sentence to its match in the next year's filing to form chains. A chain starts when a sentence first appears and ends when it's removed; it's right-censored at the company's last filing or at 2020. A missing year breaks the chain and counts as censoring (only consecutive-year links). Report:
+**Survival of risk sentences.** Link each sentence to its match in the next year's filing to form chains. A chain starts when a sentence first appears and ends when it's removed; it's right-censored at the company's last filing or at the last corpus year (reports on fiscal 2020). A missing year breaks the chain and counts as censoring (only consecutive-year links). Report:
 - Kaplan–Meier curves overall, and for peer-shared vs. company-specific sentences.
 - A hazard model of removal with a company-level random effect (frailty). Covariates: peer-shared, sentence length, position in section, SIC division, section length, year added. The proportional-hazards assumption is checked; if it fails, a discrete-time hazard model is used instead. If the full set of chains is too slow to fit with a random effect, fit on a stratified sample of companies and say so.
 
@@ -95,11 +95,13 @@ Answered in three layers, each building on the one before and each showing a dif
 
 **Question:** when COVID hit, did companies rewrite, or append?
 
-**Exposure:** filing date. 10-Ks filed after mid-March 2020 were written during the pandemic; those filed earlier mostly weren't. Filing month follows from fiscal-year end and filer status, so it isn't random. A manipulation check counts COVID terms per filing.
+**Exposure:** filing date. 10-Ks filed after mid-March 2020 were written during the pandemic; those filed earlier mostly weren't. These are almost all reports on fiscal 2019 (corpus year 2019): 22% were filed before the disease was named on 2020-02-11 and 34% on or after 2020-03-11. Filing month follows from fiscal-year end and filer status, so it isn't random. A manipulation check counts COVID terms per filing.
 
-**Design:** difference-in-differences by filing month. Compare 2020 filings filed after the shock with those filed before, relative to the same calendar months in 2017–2019, which absorbs the stable differences between early and late filers. Outcomes: share new, share removed, change in section length. "Append" means new sentences rise while removals don't; "rewrite" means both rise.
+**Design:** difference-in-differences by filing month. Compare reports filed in 2020 after the shock with those filed in 2020 before it, relative to the same calendar months in 2017–2019, which absorbs the stable differences between early and late filers. Rows with a unique filing match carry the main result; rows with several candidate filings are a robustness check. Outcomes: share new, share removed, change in section length. "Append" means new sentences rise while removals don't; "rewrite" means both rise.
 
 **Checks:** an event-study plot by filing month; placebo shocks in 2018 and 2019; results with and without companies whose fiscal year changed. Limits are stated plainly on the page.
+
+**The year after.** Reports on fiscal 2020 were filed under both the pandemic and the amended Item 105 rules (87% on or after 2020-11-09), so this corpus can't separate the two. They're reported descriptively: whether the text added in 2020 stayed, and whether sections changed in the ways the rules asked for.
 
 ## Deliverables
 
