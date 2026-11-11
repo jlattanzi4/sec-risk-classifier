@@ -81,3 +81,46 @@ SIC codes come from the same archive, grouped into SIC divisions. 98.5% of secti
 | (no code) | 1,109 |
 
 The archive holds each company's current SIC code, not its code at the time of each filing. A company that changed industry is classified by where it ended up.
+
+## Sentences
+
+The unit of analysis is the sentence. Splitting matters more than it looks: a missed boundary glues two sentences into one that matches nothing, and a false one turns a sentence into fragments.
+
+```
+uv run python -m scripts.compare_splitters             # the comparison below
+uv run python -m scripts.compare_splitters --sample 80  # plus the disagreements to review
+```
+
+### What the text looks like
+
+The sections are plain text extracted from HTML. A newline usually ends a paragraph, a heading, or a list item, but not always: in a 600-section sample, 25% of lines don't end in sentence punctuation. Most of those are bullet markers, list items and headings, and about 2% of all lines break in the middle of a sentence (the next line starts in lower case). So lines are stitched before sentences are split: a line that plainly continues is joined to the one before it, a bullet glyph on its own line marks the next line as a list item, and a short line with no end punctuation followed by a new paragraph is kept whole as a heading.
+
+### Choosing the splitter
+
+Three candidates, on the 15 test cases in `tests/test_sentences.py` and on 50 sections sampled with `random_state=0` (3.6 MB of text):
+
+| Splitter | Cases passed | Sentences per section | Over 1,500 characters | Under 40 characters | MB/s | Full corpus, 8 workers |
+|---|---|---|---|---|---|---|
+| Naive regex (split after `.!?` before a capital) | 10/15 | 416.7 | 0.00% | 8.2% | 44.98 | 10 s |
+| pysbd 0.3.4 | 11/15 | 416.7 | 0.00% | 7.8% | 0.42 | 18 min |
+| `pipeline.sentences` (used) | 15/15 | 388.2 | 0.01% | 2.8% | 30.54 | 15 s |
+
+The case count alone would be a rigged contest: all three pass the 8 cases the plan started with, and the other 7 were added from failures seen in the real text while this splitter was being written, so it passes them by construction. The fair test is where the two serious candidates disagree on text neither was tuned on.
+
+Run on the same stitched paragraphs, pysbd and `pipeline.sentences` split 98.0% of 7,737 paragraphs identically. They differ at 309 boundaries: 293 that only pysbd makes and 16 that only this splitter makes. A random 80 of those (seed 0) were read and judged one by one; the judgments are in [`docs/reviews/splitter_disagreements.csv`](reviews/splitter_disagreements.csv):
+
+| Who was right | Disagreements |
+|---|---|
+| `pipeline.sentences` | 74 |
+| pysbd | 3 |
+| Either reading is fine | 3 |
+
+Nearly all of pysbd's extra boundaries fall inside a sentence: before an enumerated clause ("...the earlier of ‖ (i) the completion..."), after a cross-reference ("see Item 7. ‖ Management's Discussion..."), or after an abbreviation ("A.M. ‖ Best ratings"). This project keeps a sentence with its enumerated clauses whole on purpose, because a sentence is the unit a company keeps, edits or drops. The three pysbd wins are real misses here: a sentence ending in "Inc." before a word that isn't a common opener, "Yahoo! Inc.", and a sentence that ends on "Item 1."
+
+Who judged: Claude, during the build session, reading each context. Joe didn't hand-label them. The file is committed so anyone can disagree with a specific row.
+
+### Debris and normalization
+
+A segment is dropped as debris when it has fewer than 15 letters or when letters are under half of its non-space characters (table rows, page numbers, stray list markers). Sentences over 1,500 characters are kept and flagged `is_long`.
+
+For matching, each sentence also gets a normalized form: Unicode NFKC, lower case, every digit replaced by `0`, every other character outside `a-z` replaced by a space, whitespace collapsed. "Revenue fell 12.5% in 2019." and "Revenue fell 14.0% in 2020!" normalize to the same string, so a sentence whose only change is its numbers counts as carried over. `norm_hash` is the first 8 bytes of the BLAKE2b hash of that string, as a signed 64-bit integer.

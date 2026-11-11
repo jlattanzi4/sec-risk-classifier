@@ -19,8 +19,13 @@ line-length = 100
 # The old modeling code is left alone until milestone 5 removes it.
 extend-exclude = ["src", "notebooks"]
 
+[tool.ruff.lint]
+# Long word lists read better as one split string than as a list of quoted words.
+extend-ignore = ["SIM905"]
+
 [dependency-groups]
 dev = [
+    "pysbd>=0.3.4",
     "pytest>=9.2.0",
     "ruff>=0.17.4",
 ]
