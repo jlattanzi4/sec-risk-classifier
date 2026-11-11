@@ -55,16 +55,21 @@ def peer_counts(sentences: pd.DataFrame, groups: pd.Series) -> pd.DataFrame:
     return counts.reset_index()[PEER_COLUMNS]
 
 
+def near_column(threshold: float) -> str:
+    return f"near_others_{round(threshold * 100):03d}"
+
+
 def near_peer_counts(
-    sentences: pd.DataFrame, groups: pd.Series, queries: np.ndarray, tau_v: float
+    sentences: pd.DataFrame, groups: pd.Series, queries: np.ndarray, thresholds: tuple[float, ...]
 ) -> pd.DataFrame:
     """For chosen sentences, how many other groups file it word for word, and how many
     file it word for word or nearly so.
 
     `sentences` has `cik`, `norm` and `norm_hash` for one year; `queries` are
-    row labels in it. "Nearly" is a Jaccard of at least `tau_v` between
-    shingle sets, estimated from MinHash signatures, with candidates found by
-    banding. Returns one row per query: `exact_others`, `near_others`.
+    row labels in it. "Nearly" is a Jaccard between shingle sets of at least a
+    threshold, estimated from MinHash signatures, with candidates found by
+    banding. Returns one row per query: `exact_others`, and for each
+    threshold a column named by `near_column`.
     """
     group = sentences["cik"].map(groups).to_numpy()
     row, _ = pd.factorize(sentences["norm_hash"])
@@ -74,18 +79,20 @@ def near_peer_counts(
 
     at = sentences.index.get_indexer(queries)
     found = lsh_candidates(signatures, row[at])
-    exact, near = [], []
+    counts: dict[str, list[int]] = {"exact_others": []}
+    counts |= {near_column(t): [] for t in thresholds}
     for position, candidates in zip(at, found, strict=True):
-        mine = row[position]
-        others = set(holders[mine]) - {group[position]}
-        exact.append(len(others))
-        if len(candidates):
-            agreement = (signatures[candidates] == signatures[mine]).mean(axis=1)
-            for candidate in candidates[agreement >= tau_v]:
+        mine, own = row[position], group[position]
+        exact = set(holders[mine]) - {own}
+        counts["exact_others"].append(len(exact))
+        agreement = (signatures[candidates] == signatures[mine]).mean(axis=1)
+        for threshold in thresholds:
+            others = set(exact)
+            for candidate in candidates[agreement >= threshold]:
                 others.update(holders[candidate])
-            others.discard(group[position])
-        near.append(len(others))
-    return pd.DataFrame({"exact_others": exact, "near_others": near}, index=queries)
+            others.discard(own)
+            counts[near_column(threshold)].append(len(others))
+    return pd.DataFrame(counts, index=queries)
 
 
 def build_peers(cfg: Config, force: bool = False) -> Path:
@@ -114,7 +121,7 @@ def build_peers(cfg: Config, force: bool = False) -> Path:
 
 
 def near_peer_sample(
-    cfg: Config, tau_v: float, n_per_year: int = 20_000, seed: int = 0
+    cfg: Config, thresholds: tuple[float, ...], n_per_year: int = 10_000, seed: int = 0
 ) -> pd.DataFrame:
     """`near_peer_counts` for a random sample of each year's sentences.
 
@@ -128,7 +135,7 @@ def near_peer_sample(
         sentences = read_sentences(cfg, year, ["cik", "norm", "norm_hash", "is_heading"])
         queries = sentences.sample(n_per_year, random_state=seed).index.to_numpy()
         in_year = groups[groups["filing_year"] == year].set_index("cik")["group"]
-        counts = near_peer_counts(sentences, in_year, queries, tau_v)
+        counts = near_peer_counts(sentences, in_year, queries, thresholds)
         words = sentences.loc[queries, "norm"].str.count(" ") + 1
         parts.append(
             counts.assign(

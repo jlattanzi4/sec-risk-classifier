@@ -86,9 +86,10 @@ def test_near_verbatim_copies_in_other_groups_are_counted():
     sentences = table(filings)
     groups = filer_groups(sentences)
     queries = sentences.index[(sentences["cik"] == 1) & (sentences["norm"] == base)]
-    out = near_peer_counts(sentences, groups, queries.to_numpy(), tau_v=0.5)
+    out = near_peer_counts(sentences, groups, queries.to_numpy(), thresholds=(0.5, 0.9))
     assert out["exact_others"].tolist() == [1]  # company 4 has it word for word
-    assert out["near_others"].tolist() == [3]  # companies 2 and 3 have it lightly edited
+    assert out["near_others_050"].tolist() == [3]  # companies 2 and 3 have it lightly edited
+    assert out["near_others_090"].tolist() == [2]  # only company 2's copy is that close (13 of 14)
 
 
 def test_the_stage_writes_counts_and_groups_for_every_year(cfg):

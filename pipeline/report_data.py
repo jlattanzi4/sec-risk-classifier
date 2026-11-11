@@ -21,7 +21,7 @@ from pipeline.config import Config
 from pipeline.embed import MODEL, Embedder, load_embedder
 from pipeline.io import read_sentences, sentence_years
 from pipeline.labels import CURRENT_LABELS, PEER_GROUPS
-from pipeline.peers import near_peer_sample
+from pipeline.peers import near_column, near_peer_sample
 from pipeline.thresholds import read_thresholds
 
 SHARES = ("exact", "near", "paraphrase", "new", "removed", "peer")
@@ -150,17 +150,25 @@ def peer_reach(cfg: Config) -> dict:
     }
 
 
+NEAR_THRESHOLDS = (0.5, 0.8)  # stricter cuts than tau_v, reported beside it
+
+
 def near_peer_summary(cfg: Config, tau_v: float, n_per_year: int = 10_000) -> dict:
-    """Word-for-word reach against reach counting near-verbatim copies, on a sample."""
-    sample = near_peer_sample(cfg, tau_v, n_per_year=n_per_year)
+    """Word-for-word reach against reach that also counts near-verbatim copies, on a sample.
+
+    `tau_v` was tuned for comparing a sentence with one company's previous
+    filing. Against every sentence filed in a year it is a much weaker test,
+    because unrelated sentences that share a stock phrase clear it. So reach
+    is also given at stricter cuts.
+    """
+    thresholds = (tau_v, *NEAR_THRESHOLDS)
+    sample = near_peer_sample(cfg, thresholds, n_per_year=n_per_year)
     full = ~sample["is_heading"] & (sample["n_words"] >= FULL_SENTENCE_WORDS)
-    out = {"n": len(sample), "n_full": int(full.sum()), "tau_v": tau_v}
+    out = {"n": len(sample), "n_full": int(full.sum()), "thresholds": list(thresholds)}
     for name, part in (("all", sample), ("full", sample[full])):
         out[name] = {
-            f"k{k}": {
-                "exact": float((part["exact_others"] >= k).mean()),
-                "near": float((part["near_others"] >= k).mean()),
-            }
+            f"k{k}": {"exact": float((part["exact_others"] >= k).mean())}
+            | {f"near_{t:.2f}": float((part[near_column(t)] >= k).mean()) for t in thresholds}
             for k in REACH
         }
     return out
