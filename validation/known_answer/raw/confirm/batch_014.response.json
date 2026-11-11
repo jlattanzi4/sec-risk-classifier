@@ -1,0 +1,15 @@
+{
+ "result": "[\n{\"id\":\"c0700\",\"label\":\"same\"},\n{\"id\":\"c0701\",\"label\":\"different\"},\n{\"id\":\"c0702\",\"label\":\"same\"},\n{\"id\":\"c0703\",\"label\":\"same\"},\n{\"id\":\"c0704\",\"label\":\"different\"},\n{\"id\":\"c0705\",\"label\":\"same\"},\n{\"id\":\"c0706\",\"label\":\"different\"},\n{\"id\":\"c0707\",\"label\":\"different\"},\n{\"id\":\"c0708\",\"label\":\"same\"},\n{\"id\":\"c0709\",\"label\":\"same\"},\n{\"id\":\"c0710\",\"label\":\"different\"},\n{\"id\":\"c0711\",\"label\":\"different\"},\n{\"id\":\"c0712\",\"label\":\"same\"},\n{\"id\":\"c0713\",\"label\":\"different\"},\n{\"id\":\"c0714\",\"label\":\"same\"},\n{\"id\":\"c0715\",\"label\":\"different\"},\n{\"id\":\"c0716\",\"label\":\"different\"},\n{\"id\":\"c0717\",\"label\":\"same\"},\n{\"id\":\"c0718\",\"label\":\"same\"},\n{\"id\":\"c0719\",\"label\":\"different\"},\n{\"id\":\"c0720\",\"label\":\"same\"},\n{\"id\":\"c0721\",\"label\":\"same\"},\n{\"id\":\"c0722\",\"label\":\"same\"},\n{\"id\":\"c0723\",\"label\":\"different\"},\n{\"id\":\"c0724\",\"label\":\"different\"},\n{\"id\":\"c0725\",\"label\":\"same\"},\n{\"id\":\"c0726\",\"label\":\"same\"},\n{\"id\":\"c0727\",\"label\":\"different\"},\n{\"id\":\"c0728\",\"label\":\"different\"},\n{\"id\":\"c0729\",\"label\":\"same\"},\n{\"id\":\"c0730\",\"label\":\"different\"},\n{\"id\":\"c0731\",\"label\":\"same\"},\n{\"id\":\"c0732\",\"label\":\"same\"},\n{\"id\":\"c0733\",\"label\":\"same\"},\n{\"id\":\"c0734\",\"label\":\"different\"},\n{\"id\":\"c0735\",\"label\":\"different\"},\n{\"id\":\"c0736\",\"label\":\"different\"},\n{\"id\":\"c0737\",\"label\":\"different\"},\n{\"id\":\"c0738\",\"label\":\"same\"},\n{\"id\":\"c0739\",\"label\":\"same\"},\n{\"id\":\"c0740\",\"label\":\"different\"},\n{\"id\":\"c0741\",\"label\":\"same\"},\n{\"id\":\"c0742\",\"label\":\"different\"},\n{\"id\":\"c0743\",\"label\":\"different\"},\n{\"id\":\"c0744\",\"label\":\"different\"},\n{\"id\":\"c0745\",\"label\":\"different\"},\n{\"id\":\"c0746\",\"label\":\"different\"},\n{\"id\":\"c0747\",\"label\":\"same\"},\n{\"id\":\"c0748\",\"label\":\"same\"},\n{\"id\":\"c0749\",\"label\":\"same\"}\n]",
+ "stop_reason": "end_turn",
+ "duration_ms": 4229,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 8030,
+   "output_tokens": 226
+  },
+  "claude-sonnet-5-5": {
+   "input_tokens": 2,
+   "output_tokens": 805
+  }
+ }
+}

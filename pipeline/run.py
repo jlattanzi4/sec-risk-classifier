@@ -13,6 +13,7 @@ import pyarrow.parquet as pq
 from pipeline.candidates import build_candidates, summarize_candidates
 from pipeline.config import load_config
 from pipeline.industry import SIC_DIVISIONS
+from pipeline.known_answer import build_known_answer, summarize_known_answer
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
 
 
@@ -96,11 +97,19 @@ def _candidates(cfg, args) -> None:
     print(summarize_candidates(path))
 
 
+def _known_answer(cfg, args) -> None:
+    # Batches with a saved reply are read back, so this calls a model only for what is missing.
+    path = build_known_answer(cfg)
+    print(f"wrote {path.relative_to(cfg.root)}")
+    print(summarize_known_answer(pd.read_csv(path)))
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
     "sentences": _sentences,
     "candidates": _candidates,
+    "known-answer": _known_answer,
 }
 
 
