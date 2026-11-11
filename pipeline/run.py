@@ -14,6 +14,7 @@ from pipeline.candidates import build_candidates, summarize_candidates
 from pipeline.config import load_config
 from pipeline.embed import MODEL, build_embeddings, build_similarity
 from pipeline.industry import SIC_DIVISIONS
+from pipeline.judging import judge_with_haiku, sample_real_pairs, write_judge_inputs
 from pipeline.known_answer import build_known_answer, summarize_known_answer
 from pipeline.peers import build_peers
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
@@ -119,6 +120,25 @@ def _similarity(cfg, args) -> None:
     print(f"wrote {path.relative_to(cfg.root)}/")
 
 
+def _judge_sample(cfg, args) -> None:
+    folder = cfg.validation_dir / "real_pairs"
+    if (folder / "pairs.csv").exists() and not args.force:
+        # Labels are tied to this sample; drawing again would orphan them.
+        print(f"using {(folder / 'pairs.csv').relative_to(cfg.root)} (pass --force to draw again)")
+    else:
+        write_judge_inputs(sample_real_pairs(cfg), folder)
+        print(f"wrote {folder.relative_to(cfg.root)}/")
+    pairs = pd.read_csv(folder / "pairs.csv")
+    print(f"{len(pairs):,} pairs in {pairs['stratum'].nunique()} cells of cosine by Jaccard")
+    print(pairs.groupby("stratum").agg(sampled=("id", "size"), stands_for=("weight", "sum")))
+
+
+def _judge(cfg, args) -> None:
+    labels = judge_with_haiku(cfg)
+    print(f"judge 1 (Haiku): {len(labels):,} labels")
+    print(labels["label"].value_counts().to_string())
+
+
 def _peers(cfg, args) -> None:
     path = build_peers(cfg, force=args.force)
     groups = pd.read_parquet(cfg.interim_dir / "filer_groups.parquet")
@@ -139,6 +159,8 @@ STAGES = {
     "known-answer": _known_answer,
     "embeddings": _embeddings,
     "similarity": _similarity,
+    "judge-sample": _judge_sample,
+    "judge": _judge,
     "peers": _peers,
 }
 
