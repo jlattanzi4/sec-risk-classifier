@@ -1,4 +1,7 @@
-"""Entry point: `python -m pipeline.run {filings,sentences,all} [--force] [--workers N]`."""
+"""Entry point: `python -m pipeline.run STAGE [STAGE ...] [--force] [--workers N]`.
+
+Stages run in the order given. `all` runs every stage in pipeline order.
+"""
 
 import argparse
 import time
@@ -7,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 import pyarrow.parquet as pq
 
+from pipeline.candidates import build_candidates, summarize_candidates
 from pipeline.config import load_config
 from pipeline.industry import SIC_DIVISIONS
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
@@ -61,22 +65,43 @@ def summarize_sentences(sentences_dir: Path, n_filings: int) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m pipeline.run", description=__doc__)
-    parser.add_argument("stage", choices=["filings", "sentences", "all"], help="what to build")
+    parser.add_argument("stages", nargs="+", choices=[*STAGES, "all"], help="what to build")
     parser.add_argument("--force", action="store_true", help="rebuild even if cached")
-    parser.add_argument("--workers", type=int, default=8, help="processes for sentence splitting")
+    parser.add_argument("--workers", type=int, default=8, help="processes for the parallel stages")
     args = parser.parse_args(argv)
 
     cfg = load_config()
-    if args.stage in ("filings", "all"):
-        path = build_filings(cfg, force=args.force)
-        print(f"wrote {path.relative_to(cfg.root)}")
-        print(summarize_filings(pd.read_parquet(path)))
-    if args.stage in ("sentences", "all"):
+    for stage in STAGES if "all" in args.stages else args.stages:
         start = time.perf_counter()
-        path = build_sentences(cfg, workers=args.workers, force=args.force)
-        print(f"wrote {path.relative_to(cfg.root)}/ in {time.perf_counter() - start:,.0f} s")
-        n_filings = pq.read_metadata(cfg.root / CORPUS).num_rows
-        print(summarize_sentences(path, n_filings))
+        STAGES[stage](cfg, args)
+        print(f"[{stage}] done in {time.perf_counter() - start:,.0f} s\n")
+
+
+def _filings(cfg, args) -> None:
+    path = build_filings(cfg, force=args.force)
+    print(f"wrote {path.relative_to(cfg.root)}")
+    print(summarize_filings(pd.read_parquet(path)))
+
+
+def _sentences(cfg, args) -> None:
+    path = build_sentences(cfg, workers=args.workers, force=args.force)
+    print(f"wrote {path.relative_to(cfg.root)}/")
+    n_filings = pq.read_metadata(cfg.root / CORPUS).num_rows
+    print(summarize_sentences(path, n_filings))
+
+
+def _candidates(cfg, args) -> None:
+    path = build_candidates(cfg, workers=args.workers, force=args.force)
+    print(f"wrote {path.relative_to(cfg.root)}/")
+    print(summarize_candidates(path))
+
+
+# In pipeline order: each stage reads what the ones before it wrote.
+STAGES = {
+    "filings": _filings,
+    "sentences": _sentences,
+    "candidates": _candidates,
+}
 
 
 if __name__ == "__main__":
