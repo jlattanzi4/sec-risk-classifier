@@ -13,9 +13,9 @@ or which band a pair came from. Both follow `rubric_v1.md`. No person labeled
 anything; the write-up says so.
 """
 
+from itertools import pairwise
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
@@ -44,9 +44,7 @@ def _allocate(sizes: pd.Series, n: int) -> pd.Series:
 
 
 def _band(values: pd.Series, edges: list[float], name: str) -> pd.Series:
-    labels = [
-        f"{name} {lo:.2f}-{min(hi, 1.0):.2f}" for lo, hi in zip(edges, edges[1:], strict=False)
-    ]
+    labels = [f"{name} {lo:.2f}-{min(hi, 1.0):.2f}" for lo, hi in pairwise(edges)]
     return pd.cut(values, edges, right=False, labels=labels).astype(str)
 
 
