@@ -176,7 +176,7 @@ def fit_hazard(
     periods: pd.DataFrame,
     vary_by_age: bool,
     warmup: int = 1000,
-    draws: int = 1000,
+    draws: int = 1500,
     chains: int = 4,
     seed: int = 0,
     check: bool = True,

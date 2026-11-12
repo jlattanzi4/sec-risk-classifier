@@ -13,8 +13,10 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 from pipeline.candidates import build_candidates, summarize_candidates
+from pipeline.chains import build_chains
 from pipeline.config import load_config
 from pipeline.embed import MODEL, build_embeddings, build_similarity
+from pipeline.explain_results import build_explain_results
 from pipeline.industry import SIC_DIVISIONS
 from pipeline.judging import judge_with_haiku, sample_real_pairs, write_judge_inputs
 from pipeline.known_answer import build_known_answer, summarize_known_answer
@@ -244,6 +246,46 @@ def _peers(cfg, args) -> None:
     )
 
 
+def _chains(cfg, args) -> None:
+    path = build_chains(cfg)
+    chains = pd.read_parquet(path)
+    watched = chains["event"] | (chains["duration"] > 1)
+    print(f"wrote {path.relative_to(cfg.root)}: {len(chains):,} added sentences followed")
+    print(
+        f"removed while watched: {chains['event'].sum():,}; still there when the data end: "
+        f"{(~chains['event']).sum():,} ({(~watched).sum():,} of them never watched)"
+    )
+    print(f"shared with peers when added: {chains['peer_shared'].mean():.1%}")
+
+
+def _explain(cfg, args) -> None:
+    path = build_explain_results(cfg)
+    saved = json.loads(path.read_text())
+    print(f"wrote {path.relative_to(cfg.root)}")
+    overall = saved["survival"]["overall"]
+    print(f"median survival: {overall['median']} filings; survival by age:")
+    print("  " + "  ".join(f"{row['age']}: {row['survival']:.3f}" for row in overall["curve"]))
+    for name, group in saved["survival"]["by_peer_shared"].items():
+        first = group["curve"][0]
+        print(
+            f"  {name}: {group['chains']:,} chains, {first['survival']:.3f} past one filing, median {group['median']}"
+        )
+    print(f"proportional hazards rejected: {saved['cox']['proportional_hazards_rejected']}")
+    for name, fit in saved["hazard"].items():
+        print(f"hazard model ({name}): {fit['companies']:,} companies, {fit['diagnostics']}")
+        for term, ratio in fit["hazard_ratios"].items():
+            print(f"  {term:<28}{ratio['value']:.3f} ({ratio['low']:.3f}-{ratio['high']:.3f})")
+        print(
+            f"  company sd {fit['company_sd']['value']:.3f} ({fit['company_sd']['low']:.3f}-{fit['company_sd']['high']:.3f})"
+        )
+    for scale, fit in saved["variance"].items():
+        print(
+            f"variance decomposition ({scale} scale), {fit['n']:,} filings, {fit['diagnostics']}:"
+        )
+        for part, share in fit["share"].items():
+            print(f"  {part:<10}{share['value']:.1%} ({share['low']:.1%}-{share['high']:.1%})")
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
@@ -259,6 +301,8 @@ STAGES = {
     "labels": _labels,
     "baselines": _baselines,
     "measure-report": _measure_report,
+    "chains": _chains,
+    "explain": _explain,
 }
 
 

@@ -29,7 +29,7 @@ def simulate(seed=0, n_companies=600, n_divisions=8, n_years=10):
 
 @pytest.fixture(scope="module")
 def fit():
-    return fit_variance(simulate(), warmup=500, draws=500, chains=2, seed=0)
+    return fit_variance(simulate(), warmup=500, draws=1000, chains=2, seed=0)
 
 
 def test_each_spread_is_recovered(fit):
