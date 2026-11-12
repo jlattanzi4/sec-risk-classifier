@@ -1,0 +1,1496 @@
+{
+ "sample": {
+  "paired_filings": 12648,
+  "december_year_end": 9846,
+  "year_end_unchanged": 9704,
+  "single_matching_filing": 9692,
+  "companies": 4163,
+  "by_year": {
+   "2016": {
+    "filings": 2435,
+    "late": 0.39383983572895276,
+    "late_usual": 0.4082135523613963
+   },
+   "2017": {
+    "filings": 2409,
+    "late": 0.38314653383146535,
+    "late_usual": 0.3814860938148609
+   },
+   "2018": {
+    "filings": 2459,
+    "late": 0.3952826352175681,
+    "late_usual": 0.39568930459536394
+   },
+   "2019": {
+    "filings": 2389,
+    "late": 0.3871912934282126,
+    "late_usual": 0.4114692339891168
+   }
+  }
+ },
+ "exposure": {
+  "2018": {
+   "early": {
+    "filings": 1487,
+    "mention": 0.0013449899125756557,
+    "share_of_sentences": 1.8589547474144365e-06,
+    "share_new_covid": 1.2117026239420322e-06
+   },
+   "late": {
+    "filings": 972,
+    "mention": 0.00205761316872428,
+    "share_of_sentences": 7.882783393718669e-05,
+    "share_new_covid": 7.170806518727569e-05
+   }
+  },
+  "2019": {
+   "early": {
+    "filings": 1464,
+    "mention": 0.3907103825136612,
+    "share_of_sentences": 0.002314663495393349,
+    "share_new_covid": 0.0018039487328720336
+   },
+   "late": {
+    "filings": 925,
+    "mention": 0.8205405405405405,
+    "share_of_sentences": 0.014494831588391351,
+    "share_new_covid": 0.013358171107754491
+   }
+  },
+  "by_week": [
+   {
+    "week": -7,
+    "filings": 3,
+    "mention": 0.0
+   },
+   {
+    "week": -6,
+    "filings": 18,
+    "mention": 0.0
+   },
+   {
+    "week": -5,
+    "filings": 52,
+    "mention": 0.21153846153846154
+   },
+   {
+    "week": -4,
+    "filings": 151,
+    "mention": 0.2980132450331126
+   },
+   {
+    "week": -3,
+    "filings": 416,
+    "mention": 0.28365384615384615
+   },
+   {
+    "week": -2,
+    "filings": 610,
+    "mention": 0.44754098360655736
+   },
+   {
+    "week": -1,
+    "filings": 214,
+    "mention": 0.5841121495327103
+   },
+   {
+    "week": 0,
+    "filings": 385,
+    "mention": 0.7480519480519481
+   },
+   {
+    "week": 1,
+    "filings": 94,
+    "mention": 0.8829787234042553
+   },
+   {
+    "week": 2,
+    "filings": 243,
+    "mention": 0.8806584362139918
+   },
+   {
+    "week": 3,
+    "filings": 16,
+    "mention": 0.9375
+   },
+   {
+    "week": 4,
+    "filings": 35,
+    "mention": 0.8
+   },
+   {
+    "week": 5,
+    "filings": 11,
+    "mention": 0.9090909090909091
+   },
+   {
+    "week": 6,
+    "filings": 5,
+    "mention": 1.0
+   },
+   {
+    "week": 7,
+    "filings": 10,
+    "mention": 1.0
+   },
+   {
+    "week": 8,
+    "filings": 9,
+    "mention": 1.0
+   },
+   {
+    "week": 9,
+    "filings": 33,
+    "mention": 0.9090909090909091
+   },
+   {
+    "week": 10,
+    "filings": 5,
+    "mention": 1.0
+   },
+   {
+    "week": 11,
+    "filings": 21,
+    "mention": 1.0
+   },
+   {
+    "week": 12,
+    "filings": 5,
+    "mention": 0.8
+   }
+  ]
+ },
+ "covid_by_month": [
+  {
+   "month": "2019-02",
+   "filings": 1086,
+   "mention": 0.001841620626151013,
+   "share_of_sentences": 2.5453643733013502e-06
+  },
+  {
+   "month": "2019-03",
+   "filings": 1081,
+   "mention": 0.0,
+   "share_of_sentences": 0.0
+  },
+  {
+   "month": "2019-04",
+   "filings": 251,
+   "mention": 0.0,
+   "share_of_sentences": 0.0
+  },
+  {
+   "month": "2020-02",
+   "filings": 1082,
+   "mention": 0.33271719038817005,
+   "share_of_sentences": 0.0019598304288725283
+  },
+  {
+   "month": "2020-03",
+   "filings": 1120,
+   "mention": 0.725,
+   "share_of_sentences": 0.008915148643189078
+  },
+  {
+   "month": "2020-04",
+   "filings": 76,
+   "mention": 0.881578947368421,
+   "share_of_sentences": 0.01738822859343535
+  },
+  {
+   "month": "2020-05",
+   "filings": 71,
+   "mention": 0.9577464788732394,
+   "share_of_sentences": 0.02972836094440677
+  },
+  {
+   "month": "2020-06",
+   "filings": 23,
+   "mention": 0.8695652173913043,
+   "share_of_sentences": 0.024708426450145454
+  },
+  {
+   "month": "2021-02",
+   "filings": 1003,
+   "mention": 0.9880358923230309,
+   "share_of_sentences": 0.034451490015390315
+  },
+  {
+   "month": "2021-03",
+   "filings": 1219,
+   "mention": 0.9794913863822805,
+   "share_of_sentences": 0.031493180648368806
+  },
+  {
+   "month": "2021-04",
+   "filings": 117,
+   "mention": 0.9230769230769231,
+   "share_of_sentences": 0.04443302280804455
+  }
+ ],
+ "did": {
+  "share_new": {
+   "outcome": "share_new",
+   "event_year": 2019,
+   "comparison": [
+    2016,
+    2017,
+    2018
+   ],
+   "exposure": "late",
+   "fixed_effects": true,
+   "estimate": 0.00825666326939627,
+   "se": 0.0074772713683066904,
+   "low": -0.00640457367146224,
+   "high": 0.02291790021025478,
+   "p": 0.269581939555809,
+   "filings": 9692,
+   "companies": 4163,
+   "exposed_event_filings": 925,
+   "means": {
+    "early": {
+     "comparison": 0.09855869629509895,
+     "event": 0.09896818398835894
+    },
+    "late": {
+     "comparison": 0.11115221835858813,
+     "event": 0.1302743860533097
+    }
+   }
+  },
+  "share_removed": {
+   "outcome": "share_removed",
+   "event_year": 2019,
+   "comparison": [
+    2016,
+    2017,
+    2018
+   ],
+   "exposure": "late",
+   "fixed_effects": true,
+   "estimate": -0.006320473626837449,
+   "se": 0.007291705728133431,
+   "low": -0.02061785834344823,
+   "high": 0.007976911089773334,
+   "p": 0.3861208189062004,
+   "filings": 9692,
+   "companies": 4163,
+   "exposed_event_filings": 925,
+   "means": {
+    "early": {
+     "comparison": 0.07274579463748437,
+     "event": 0.07434912709342748
+    },
+    "late": {
+     "comparison": 0.08611642653905553,
+     "event": 0.08936730028161609
+    }
+   }
+  },
+  "share_near": {
+   "outcome": "share_near",
+   "event_year": 2019,
+   "comparison": [
+    2016,
+    2017,
+    2018
+   ],
+   "exposure": "late",
+   "fixed_effects": true,
+   "estimate": -0.004852677735996602,
+   "se": 0.003591303991800895,
+   "low": -0.01189441210097094,
+   "high": 0.002189056628977736,
+   "p": 0.1767260501263732,
+   "filings": 9692,
+   "companies": 4163,
+   "exposed_event_filings": 925,
+   "means": {
+    "early": {
+     "comparison": 0.11681385942176693,
+     "event": 0.11817157144878507
+    },
+    "late": {
+     "comparison": 0.08406224242977899,
+     "event": 0.07910526320179388
+    }
+   }
+  },
+  "growth": {
+   "outcome": "growth",
+   "event_year": 2019,
+   "comparison": [
+    2016,
+    2017,
+    2018
+   ],
+   "exposure": "late",
+   "fixed_effects": true,
+   "estimate": 0.010331286545638517,
+   "se": 0.012765145363091255,
+   "low": -0.014698274578229727,
+   "high": 0.03536084766950676,
+   "p": 0.41838783039959626,
+   "filings": 9692,
+   "companies": 4163,
+   "exposed_event_filings": 925,
+   "means": {
+    "early": {
+     "comparison": 0.029683021049242236,
+     "event": 0.026664869497693738
+    },
+    "late": {
+     "comparison": 0.03577588635529136,
+     "event": 0.04893931150737669
+    }
+   }
+  },
+  "share_new_ex_covid": {
+   "outcome": "share_new_ex_covid",
+   "event_year": 2019,
+   "comparison": [
+    2016,
+    2017,
+    2018
+   ],
+   "exposure": "late",
+   "fixed_effects": true,
+   "estimate": -0.0037756537768167753,
+   "se": 0.007394328273761522,
+   "low": -0.018274258080469005,
+   "high": 0.010722950526835452,
+   "p": 0.6096592335635365,
+   "filings": 9692,
+   "companies": 4163,
+   "exposed_event_filings": 925,
+   "means": {
+    "early": {
+     "comparison": 0.09855829130480857,
+     "event": 0.0971642352554869
+    },
+    "late": {
+     "comparison": 0.1111251228084264,
+     "event": 0.11691621494555522
+    }
+   }
+  }
+ },
+ "robustness": {
+  "share_new": {
+   "main": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.00825666326939627,
+    "se": 0.0074772713683066904,
+    "low": -0.00640457367146224,
+    "high": 0.02291790021025478,
+    "p": 0.269581939555809,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.09855869629509895,
+      "event": 0.09896818398835894
+     },
+     "late": {
+      "comparison": 0.11115221835858813,
+      "event": 0.1302743860533097
+     }
+    }
+   },
+   "exposure by last year's filing date": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late_usual",
+    "fixed_effects": true,
+    "estimate": 0.003750068138727756,
+    "se": 0.007479918534319263,
+    "low": -0.010916359295590256,
+    "high": 0.01841649557304577,
+    "p": 0.6161614405936362,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 983,
+    "means": {
+     "early": {
+      "comparison": 0.10111780673133693,
+      "event": 0.10340436429615019
+     },
+     "late": {
+      "comparison": 0.10709588311849984,
+      "event": 0.12208208774962544
+     }
+    }
+   },
+   "no company fixed effects": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": false,
+    "estimate": 0.018635807283039155,
+    "se": 0.006627190509255216,
+    "low": 0.00564297409705156,
+    "high": 0.03162864046902675,
+    "p": 0.0049461639706787075,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.09855869629509895,
+      "event": 0.09896818398835894
+     },
+     "late": {
+      "comparison": 0.11115221835858813,
+      "event": 0.1302743860533097
+     }
+    }
+   },
+   "with filings that have several candidate 10-Ks": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.008463721051393753,
+    "se": 0.00747535297788581,
+    "low": -0.006193746107528302,
+    "high": 0.023121188210315807,
+    "p": 0.25763574296883474,
+    "filings": 9704,
+    "companies": 4167,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.09861358459834858,
+      "event": 0.09892543387852934
+     },
+     "late": {
+      "comparison": 0.11115221835858813,
+      "event": 0.1302743860533097
+     }
+    }
+   },
+   "with companies whose fiscal year end changed": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.008221299192855346,
+    "se": 0.007483697688377497,
+    "low": -0.006452450659234431,
+    "high": 0.022895049044945125,
+    "p": 0.27204847846844094,
+    "filings": 9834,
+    "companies": 4226,
+    "exposed_event_filings": 936,
+    "means": {
+     "early": {
+      "comparison": 0.0993110138284032,
+      "event": 0.09875756096784037
+     },
+     "late": {
+      "comparison": 0.11407024276672484,
+      "event": 0.13103781894692484
+     }
+    }
+   },
+   "within three weeks of the cutoff": {
+    "outcome": "share_new",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.009806919556067417,
+    "se": 0.007779077715372185,
+    "low": -0.005447693104366547,
+    "high": 0.02506153221650138,
+    "p": 0.20755038750402988,
+    "filings": 7808,
+    "companies": 3542,
+    "exposed_event_filings": 722,
+    "means": {
+     "early": {
+      "comparison": 0.10034986842193819,
+      "event": 0.09971668747981219
+     },
+     "late": {
+      "comparison": 0.10670792058022656,
+      "event": 0.11968493372606587
+     }
+    }
+   }
+  },
+  "share_removed": {
+   "main": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.006320473626837449,
+    "se": 0.007291705728133431,
+    "low": -0.02061785834344823,
+    "high": 0.007976911089773334,
+    "p": 0.3861208189062004,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.07274579463748437,
+      "event": 0.07434912709342748
+     },
+     "late": {
+      "comparison": 0.08611642653905553,
+      "event": 0.08936730028161609
+     }
+    }
+   },
+   "exposure by last year's filing date": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late_usual",
+    "fixed_effects": true,
+    "estimate": -0.005525933120984452,
+    "se": 0.007210266626745761,
+    "low": -0.019663634190595858,
+    "high": 0.008611767948626954,
+    "p": 0.4435013078200467,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 983,
+    "means": {
+     "early": {
+      "comparison": 0.0740817537764072,
+      "event": 0.07632584081170987
+     },
+     "late": {
+      "comparison": 0.0839234980090928,
+      "event": 0.08565385823398641
+     }
+    }
+   },
+   "no company fixed effects": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": false,
+    "estimate": 0.001593693770921507,
+    "se": 0.006569918216213109,
+    "low": -0.011286855129796805,
+    "high": 0.01447424267163982,
+    "p": 0.8083470908186738,
+    "filings": 9692,
+    "companies": 4163,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.07274579463748437,
+      "event": 0.07434912709342748
+     },
+     "late": {
+      "comparison": 0.08611642653905553,
+      "event": 0.08936730028161609
+     }
+    }
+   },
+   "with filings that have several candidate 10-Ks": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.006170963443512771,
+    "se": 0.007288398412494166,
+    "low": -0.020461855216557384,
+    "high": 0.008119928329531845,
+    "p": 0.39724083435497226,
+    "filings": 9704,
+    "companies": 4167,
+    "exposed_event_filings": 925,
+    "means": {
+     "early": {
+      "comparison": 0.07275229828164911,
+      "event": 0.07430279594573204
+     },
+     "late": {
+      "comparison": 0.08611642653905553,
+      "event": 0.08936730028161609
+     }
+    }
+   },
+   "with companies whose fiscal year end changed": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.006766794240491961,
+    "se": 0.0072656437901356926,
+    "low": -0.021012992300632354,
+    "high": 0.0074794038196484315,
+    "p": 0.35175263274390356,
+    "filings": 9834,
+    "companies": 4226,
+    "exposed_event_filings": 936,
+    "means": {
+     "early": {
+      "comparison": 0.07327504690829162,
+      "event": 0.07469089710342819
+     },
+     "late": {
+      "comparison": 0.08887723319863758,
+      "event": 0.09033485563594099
+     }
+    }
+   },
+   "within three weeks of the cutoff": {
+    "outcome": "share_removed",
+    "event_year": 2019,
+    "comparison": [
+     2016,
+     2017,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.004848089222580929,
+    "se": 0.008072846752674027,
+    "low": -0.020678776970529784,
+    "high": 0.010982598525367926,
+    "p": 0.5482028419260876,
+    "filings": 7808,
+    "companies": 3542,
+    "exposed_event_filings": 722,
+    "means": {
+     "early": {
+      "comparison": 0.0730736428737175,
+      "event": 0.07578628443710998
+     },
+     "late": {
+      "comparison": 0.08052184518389341,
+      "event": 0.08215845089033376
+     }
+    }
+   }
+  }
+ },
+ "event_study": {
+  "share_new": [
+   {
+    "bin": "\u2264 -4",
+    "weeks": [
+     null,
+     -4
+    ],
+    "n_event": 224,
+    "n_comparison": 680,
+    "estimate": 0.016717893237213583,
+    "se": 0.009009464251218237,
+    "low": -0.000947627190088788,
+    "high": 0.03438341366451596,
+    "p": 0.06361199972587683
+   },
+   {
+    "bin": "-3",
+    "weeks": [
+     -3,
+     -3
+    ],
+    "n_event": 416,
+    "n_comparison": 1103,
+    "estimate": 0.01207594315709859,
+    "se": 0.00828287494274084,
+    "low": -0.004164900073728821,
+    "high": 0.028316786387926,
+    "p": 0.1449639367819786
+   },
+   {
+    "bin": "-2",
+    "weeks": [
+     -2,
+     -2
+    ],
+    "n_event": 610,
+    "n_comparison": 1946,
+    "estimate": 0.0,
+    "se": null,
+    "low": null,
+    "high": null,
+    "p": null
+   },
+   {
+    "bin": "-1",
+    "weeks": [
+     -1,
+     -1
+    ],
+    "n_event": 214,
+    "n_comparison": 720,
+    "estimate": 0.0010580776688325286,
+    "se": 0.01055969475190443,
+    "low": -0.019647093931201464,
+    "high": 0.02176324926886652,
+    "p": 0.9201926804257328
+   },
+   {
+    "bin": "0",
+    "weeks": [
+     0,
+     0
+    ],
+    "n_event": 385,
+    "n_comparison": 1037,
+    "estimate": 0.012281871321474791,
+    "se": 0.010484451436128814,
+    "low": -0.008275765164951043,
+    "high": 0.032839507807900625,
+    "p": 0.2415185015885013
+   },
+   {
+    "bin": "1",
+    "weeks": [
+     1,
+     1
+    ],
+    "n_event": 94,
+    "n_comparison": 375,
+    "estimate": 0.008135887914927692,
+    "se": 0.021908026551668822,
+    "low": -0.03482079405626242,
+    "high": 0.0510925698861178,
+    "p": 0.7103920686119356
+   },
+   {
+    "bin": "2",
+    "weeks": [
+     2,
+     2
+    ],
+    "n_event": 243,
+    "n_comparison": 665,
+    "estimate": 0.017741865240919755,
+    "se": 0.013088311035344795,
+    "low": -0.007921350629269932,
+    "high": 0.04340508111110944,
+    "p": 0.17534670334673685
+   },
+   {
+    "bin": "3 to 6",
+    "weeks": [
+     3,
+     6
+    ],
+    "n_event": 67,
+    "n_comparison": 614,
+    "estimate": 0.011068450729717523,
+    "se": 0.03303742894363693,
+    "low": -0.05371047059076529,
+    "high": 0.07584737205020034,
+    "p": 0.7376282363649431
+   },
+   {
+    "bin": "7 and later",
+    "weeks": [
+     7,
+     null
+    ],
+    "n_event": 136,
+    "n_comparison": 163,
+    "estimate": 0.0050399837218973965,
+    "se": 0.03954940869091856,
+    "low": -0.07250745612977641,
+    "high": 0.08258742357357121,
+    "p": 0.8986047613651591
+   }
+  ],
+  "share_removed": [
+   {
+    "bin": "\u2264 -4",
+    "weeks": [
+     null,
+     -4
+    ],
+    "n_event": 224,
+    "n_comparison": 680,
+    "estimate": -0.014120912099070057,
+    "se": 0.008682773097081067,
+    "low": -0.031145865107943656,
+    "high": 0.0029040409098035416,
+    "p": 0.1039904562609173
+   },
+   {
+    "bin": "-3",
+    "weeks": [
+     -3,
+     -3
+    ],
+    "n_event": 416,
+    "n_comparison": 1103,
+    "estimate": -0.0015449456065462141,
+    "se": 0.008224094817464715,
+    "low": -0.017670534314481838,
+    "high": 0.014580643101389408,
+    "p": 0.8510025344416465
+   },
+   {
+    "bin": "-2",
+    "weeks": [
+     -2,
+     -2
+    ],
+    "n_event": 610,
+    "n_comparison": 1946,
+    "estimate": 0.0,
+    "se": null,
+    "low": null,
+    "high": null,
+    "p": null
+   },
+   {
+    "bin": "-1",
+    "weeks": [
+     -1,
+     -1
+    ],
+    "n_event": 214,
+    "n_comparison": 720,
+    "estimate": -0.00970595680132382,
+    "se": 0.010858174941520533,
+    "low": -0.030996380502901516,
+    "high": 0.011584466900253875,
+    "p": 0.37145695843470805
+   },
+   {
+    "bin": "0",
+    "weeks": [
+     0,
+     0
+    ],
+    "n_event": 385,
+    "n_comparison": 1037,
+    "estimate": -0.0014966308767590988,
+    "se": 0.01105485888838446,
+    "low": -0.02317270728577468,
+    "high": 0.020179445532256483,
+    "p": 0.8923190104852092
+   },
+   {
+    "bin": "1",
+    "weeks": [
+     1,
+     1
+    ],
+    "n_event": 94,
+    "n_comparison": 375,
+    "estimate": -0.016799262351075865,
+    "se": 0.021119234798137973,
+    "low": -0.05820930220833532,
+    "high": 0.02461077750618359,
+    "p": 0.4264171042889262
+   },
+   {
+    "bin": "2",
+    "weeks": [
+     2,
+     2
+    ],
+    "n_event": 243,
+    "n_comparison": 665,
+    "estimate": -0.01735954369934584,
+    "se": 0.011849844603816224,
+    "low": -0.04059440717979849,
+    "high": 0.005875319781106808,
+    "p": 0.14303919158272627
+   },
+   {
+    "bin": "3 to 6",
+    "weeks": [
+     3,
+     6
+    ],
+    "n_event": 67,
+    "n_comparison": 614,
+    "estimate": -0.02652227847623944,
+    "se": 0.025878756772760962,
+    "low": -0.07726466377851555,
+    "high": 0.024220106826036675,
+    "p": 0.3055106196697741
+   },
+   {
+    "bin": "7 and later",
+    "weeks": [
+     7,
+     null
+    ],
+    "n_event": 136,
+    "n_comparison": 163,
+    "estimate": -0.014230487959747922,
+    "se": 0.03563479822945502,
+    "low": -0.08410226262827114,
+    "high": 0.0556412867087753,
+    "p": 0.689669980824686
+   }
+  ],
+  "share_new_ex_covid": [
+   {
+    "bin": "\u2264 -4",
+    "weeks": [
+     null,
+     -4
+    ],
+    "n_event": 224,
+    "n_comparison": 680,
+    "estimate": 0.017948175053263044,
+    "se": 0.008986262117175231,
+    "low": 0.0003281487598475255,
+    "high": 0.03556820134667856,
+    "p": 0.04588593808515862
+   },
+   {
+    "bin": "-3",
+    "weeks": [
+     -3,
+     -3
+    ],
+    "n_event": 416,
+    "n_comparison": 1103,
+    "estimate": 0.012946165749490932,
+    "se": 0.008273233628113488,
+    "low": -0.003275773045318264,
+    "high": 0.029168104544300126,
+    "p": 0.11773181807188848
+   },
+   {
+    "bin": "-2",
+    "weeks": [
+     -2,
+     -2
+    ],
+    "n_event": 610,
+    "n_comparison": 1946,
+    "estimate": 0.0,
+    "se": null,
+    "low": null,
+    "high": null,
+    "p": null
+   },
+   {
+    "bin": "-1",
+    "weeks": [
+     -1,
+     -1
+    ],
+    "n_event": 214,
+    "n_comparison": 720,
+    "estimate": 0.0006400349576169157,
+    "se": 0.010581945754066322,
+    "low": -0.020108765821939677,
+    "high": 0.021388835737173505,
+    "p": 0.9517745418661625
+   },
+   {
+    "bin": "0",
+    "weeks": [
+     0,
+     0
+    ],
+    "n_event": 385,
+    "n_comparison": 1037,
+    "estimate": 0.008080042532310861,
+    "se": 0.010471329372611887,
+    "low": -0.012451864557267066,
+    "high": 0.028611949621888788,
+    "p": 0.44039294040781196
+   },
+   {
+    "bin": "1",
+    "weeks": [
+     1,
+     1
+    ],
+    "n_event": 94,
+    "n_comparison": 375,
+    "estimate": -0.0027586417332431277,
+    "se": 0.021706363264203964,
+    "low": -0.04531990763697221,
+    "high": 0.03980262417048596,
+    "p": 0.8988786121886352
+   },
+   {
+    "bin": "2",
+    "weeks": [
+     2,
+     2
+    ],
+    "n_event": 243,
+    "n_comparison": 665,
+    "estimate": 0.0005891131600156036,
+    "se": 0.012859486474709131,
+    "low": -0.024625429533005838,
+    "high": 0.025803655853037046,
+    "p": 0.9634635643313725
+   },
+   {
+    "bin": "3 to 6",
+    "weeks": [
+     3,
+     6
+    ],
+    "n_event": 67,
+    "n_comparison": 614,
+    "estimate": -0.00020201557404056305,
+    "se": 0.03274661475484245,
+    "low": -0.06441071608566634,
+    "high": 0.06400668493758521,
+    "p": 0.9950782595872245
+   },
+   {
+    "bin": "7 and later",
+    "weeks": [
+     7,
+     null
+    ],
+    "n_event": 136,
+    "n_comparison": 163,
+    "estimate": -0.01462973754023331,
+    "se": 0.03943949939087137,
+    "low": -0.09196167012854553,
+    "high": 0.06270219504807892,
+    "p": 0.7107080916665485
+   }
+  ]
+ },
+ "placebos": {
+  "share_new": [
+   {
+    "outcome": "share_new",
+    "event_year": 2017,
+    "comparison": [
+     2016,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.003199246464617812,
+    "se": 0.0077264587374594376,
+    "low": -0.011952517785107936,
+    "high": 0.01835101071434356,
+    "p": 0.678867046334303,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 923,
+    "means": {
+     "early": {
+      "comparison": 0.09675039735216837,
+      "event": 0.1021643421685197
+     },
+     "late": {
+      "comparison": 0.1074088393927408,
+      "event": 0.11898370783101622
+     }
+    }
+   },
+   {
+    "outcome": "share_new",
+    "event_year": 2018,
+    "comparison": [
+     2016,
+     2017
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.0038494548170462817,
+    "se": 0.008126530653820315,
+    "low": -0.012086859711871045,
+    "high": 0.019785769345963607,
+    "p": 0.6357672579825131,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 972,
+    "means": {
+     "early": {
+      "comparison": 0.09896525579259839,
+      "event": 0.09774885821063801
+     },
+     "late": {
+      "comparison": 0.11016194110870728,
+      "event": 0.11306960702553845
+     }
+    }
+   }
+  ],
+  "share_removed": [
+   {
+    "outcome": "share_removed",
+    "event_year": 2017,
+    "comparison": [
+     2016,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.0020672296212848004,
+    "se": 0.006829101132370321,
+    "low": -0.015459254857057111,
+    "high": 0.011324795614487512,
+    "p": 0.7621398166474975,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 923,
+    "means": {
+     "early": {
+      "comparison": 0.07100654783325194,
+      "event": 0.07621375444969208
+     },
+     "late": {
+      "comparison": 0.08459278396097593,
+      "event": 0.08930402547542789
+     }
+    }
+   },
+   {
+    "outcome": "share_removed",
+    "event_year": 2018,
+    "comparison": [
+     2016,
+     2017
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.00046905942535725107,
+    "se": 0.00734933812983559,
+    "low": -0.014881281443047638,
+    "high": 0.013943162592333138,
+    "p": 0.9491165727309392,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 972,
+    "means": {
+     "early": {
+      "comparison": 0.07402464499721263,
+      "event": 0.07019841416302902
+     },
+     "late": {
+      "comparison": 0.08669749547825785,
+      "event": 0.08499135272878931
+     }
+    }
+   }
+  ],
+  "share_near": [
+   {
+    "outcome": "share_near",
+    "event_year": 2017,
+    "comparison": [
+     2016,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.0010553842054541237,
+    "se": 0.003369518169553146,
+    "low": -0.00766308725222196,
+    "high": 0.005552318841313713,
+    "p": 0.7541463411674374,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 923,
+    "means": {
+     "early": {
+      "comparison": 0.11634826036466148,
+      "event": 0.1177422376224422
+     },
+     "late": {
+      "comparison": 0.08432484203466004,
+      "event": 0.08351286015781226
+     }
+    }
+   },
+   {
+    "outcome": "share_near",
+    "event_year": 2018,
+    "comparison": [
+     2016,
+     2017
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": -0.008162817198181216,
+    "se": 0.0037271551079407043,
+    "low": -0.015471854551074365,
+    "high": -0.0008537798452880659,
+    "p": 0.02862021037694462,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 972,
+    "means": {
+     "early": {
+      "comparison": 0.11656315296024085,
+      "event": 0.11731324915884844
+     },
+     "late": {
+      "comparison": 0.08552519786529153,
+      "event": 0.08122964764620429
+     }
+    }
+   }
+  ],
+  "growth": [
+   {
+    "outcome": "growth",
+    "event_year": 2017,
+    "comparison": [
+     2016,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.013587905235581482,
+    "se": 0.012643439952106858,
+    "low": -0.01120617287566432,
+    "high": 0.038381983346827284,
+    "p": 0.2826247482148643,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 923,
+    "means": {
+     "early": {
+      "comparison": 0.02885816757480527,
+      "event": 0.03132773225028983
+     },
+     "late": {
+      "comparison": 0.03003252879609234,
+      "event": 0.04779151305823101
+     }
+    }
+   },
+   {
+    "outcome": "growth",
+    "event_year": 2018,
+    "comparison": [
+     2016,
+     2017
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.0006218256628087432,
+    "se": 0.013056157226596699,
+    "low": -0.02498160056732905,
+    "high": 0.02622525189294654,
+    "p": 0.9620177535702394,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 972,
+    "means": {
+     "early": {
+      "comparison": 0.02938848210759857,
+      "event": 0.03026972202109733
+     },
+     "late": {
+      "comparison": 0.03671504417707538,
+      "event": 0.03395747584027331
+     }
+    }
+   }
+  ],
+  "share_new_ex_covid": [
+   {
+    "outcome": "share_new_ex_covid",
+    "event_year": 2017,
+    "comparison": [
+     2016,
+     2018
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.0032499473277774193,
+    "se": 0.007723740611230035,
+    "low": -0.011896486613558894,
+    "high": 0.018396381269113735,
+    "p": 0.6739606457582781,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 923,
+    "means": {
+     "early": {
+      "comparison": 0.09674978925166153,
+      "event": 0.1021643421685197
+     },
+     "late": {
+      "comparison": 0.10737274398136741,
+      "event": 0.11897544080956496
+     }
+    }
+   },
+   {
+    "outcome": "share_new_ex_covid",
+    "event_year": 2018,
+    "comparison": [
+     2016,
+     2017
+    ],
+    "exposure": "late",
+    "fixed_effects": true,
+    "estimate": 0.0037771552116802947,
+    "se": 0.008122768493309309,
+    "low": -0.012151781633479266,
+    "high": 0.019706092056839857,
+    "p": 0.6419706522496074,
+    "filings": 7303,
+    "companies": 3758,
+    "exposed_event_filings": 972,
+    "means": {
+     "early": {
+      "comparison": 0.09896525579259839,
+      "event": 0.0977476465080141
+     },
+     "late": {
+      "comparison": 0.11015788666619958,
+      "event": 0.11299789896035119
+     }
+    }
+   }
+  ]
+ },
+ "year_after": {
+  "by_year": {
+   "2018": {
+    "filings": 3126,
+    "share_new": 0.1045443088509124,
+    "share_removed": 0.07672739956825496,
+    "share_near": 0.10312131414538532,
+    "growth": 0.03219900272588605,
+    "share_new_covid": 2.2873333705641e-05,
+    "share_new_ex_covid": 0.10452143551720677
+   },
+   "2019": {
+    "filings": 3032,
+    "share_new": 0.10745251957153963,
+    "share_removed": 0.07889612139930863,
+    "share_near": 0.10122167542789204,
+    "growth": 0.03518978216570204,
+    "share_new_covid": 0.005112110509204957,
+    "share_new_ex_covid": 0.1023404090623347
+   },
+   "2020": {
+    "filings": 2967,
+    "share_new": 0.14822556704386466,
+    "share_removed": 0.10797857755909389,
+    "share_near": 0.10161601230241532,
+    "growth": 0.05694561219896557,
+    "share_new_covid": 0.025383007463901923,
+    "share_new_ex_covid": 0.12284255957996272
+   }
+  },
+  "fiscal_2020_by_rules": {
+   "before": {
+    "filings": 404,
+    "share_new": 0.14191694036975352,
+    "share_removed": 0.05972159748682468,
+    "share_near": 0.09678541194497893,
+    "growth": 0.09924489641865802,
+    "share_new_covid": 0.031512007251648606,
+    "share_new_ex_covid": 0.11040493311810493
+   },
+   "after": {
+    "filings": 2563,
+    "share_new": 0.14921998186100893,
+    "share_removed": 0.11558521819475397,
+    "share_near": 0.10237744911256136,
+    "growth": 0.05027806993413696,
+    "share_new_covid": 0.024416906834073725,
+    "share_new_ex_covid": 0.12480307502693522
+   }
+  },
+  "share_filed_after_rules": 0.8638355240984159,
+  "headings": {
+   "2018": {
+    "filings": 3126,
+    "summary": 0.0012795905310300703,
+    "general": 0.015035188739603326
+   },
+   "2019": {
+    "filings": 3032,
+    "summary": 0.0013192612137203166,
+    "general": 0.012203166226912929
+   },
+   "2020": {
+    "filings": 2967,
+    "summary": 0.15335355578024942,
+    "general": 0.22109875294910683
+   }
+  },
+  "added_in_2019": {
+   "mention_covid": {
+    "watched": 3730,
+    "still_there": 0.7249329758713137,
+    "sentences": 5209
+   },
+   "others": {
+    "watched": 98588,
+    "still_there": 0.7685215239177182,
+    "sentences": 134124
+   }
+  },
+  "added_in_2016_2018": {
+   "watched": 275244,
+   "still_there": 0.792558602549011,
+   "sentences": 382415
+  }
+ }
+}

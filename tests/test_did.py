@@ -220,3 +220,27 @@ def test_summary_headings_are_found_and_lookalikes_are_not():
         pd.Series(["Risks Related to General Economic Conditions and Other Matters Affecting Us"]),
         "general",
     ).any()
+
+
+from pipeline.did import covid_by_month, survived_one_year
+
+
+def test_covid_by_month_counts_filings_that_mention_it():
+    table = pd.DataFrame(
+        {
+            "cik": range(60),
+            "filing_year": 2019,
+            "date_filed": pd.to_datetime(["2020-02-20"] * 30 + ["2020-04-02"] * 30),
+            "mentions_covid": [False] * 27 + [True] * 3 + [True] * 30,
+            "share_covid": 0.01,
+        }
+    )
+    rows = {row["month"]: row for row in covid_by_month(table)}
+    assert rows["2020-02"]["filings"] == 30 and rows["2020-02"]["mention"] == pytest.approx(0.1)
+    assert rows["2020-04"]["mention"] == 1.0
+
+
+def test_survival_to_the_next_year_ignores_sentences_that_could_not_be_checked():
+    chains = pd.DataFrame({"duration": [1, 1, 2, 3, 1], "event": [True, True, False, True, False]})
+    # The last sentence was added in a company's final filing: nothing to check it against.
+    assert survived_one_year(chains) == {"watched": 4, "still_there": 0.5}

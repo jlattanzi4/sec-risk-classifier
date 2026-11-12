@@ -285,3 +285,100 @@ def has_heading(texts: pd.Series, kind: str) -> pd.Series:
     if kind == "general":
         return short & lower.str.match(r"\W*general risks?\b")
     raise ValueError(kind)
+
+
+RULES_EFFECTIVE = pd.Timestamp("2020-11-09")  # the SEC's amended risk-factor rules
+
+
+def covid_by_month(table: pd.DataFrame, years: tuple[int, ...] = (2018, 2019, 2020)) -> list[dict]:
+    """The exposure check: by month filed, how many filings mention COVID at all.
+
+    Before February 2020 the word did not exist, so any share above zero
+    there is an error in the dates; from April 2020 on nearly every filing
+    should have it.
+    """
+    part = table[table["filing_year"].isin(years)]
+    month = part["date_filed"].dt.to_period("M").astype(str)
+    grouped = part.groupby(month).agg(
+        filings=("cik", "size"),
+        mention=("mentions_covid", "mean"),
+        share_of_sentences=("share_covid", "mean"),
+    )
+    return [
+        {
+            "month": m,
+            "filings": int(r.filings),
+            "mention": float(r.mention),
+            "share_of_sentences": float(r.share_of_sentences),
+        }
+        for m, r in grouped.iterrows()
+        if r.filings >= 20
+    ]
+
+
+def survived_one_year(chains: pd.DataFrame) -> dict:
+    """Of added sentences that could be checked a year later, the share still there."""
+    watched = chains[chains["event"] | (chains["duration"] > 1)]
+    return {
+        "watched": len(watched),
+        "still_there": float((watched["duration"] > 1).mean()) if len(watched) else None,
+    }
+
+
+def year_after(cfg: Config, table: pd.DataFrame) -> dict:
+    """Fiscal 2020, described and not explained.
+
+    Reports on fiscal 2020 were written during the pandemic and, for most,
+    under the SEC's amended rules, so nothing here separates the two. It
+    gives: how fiscal 2020 compares with 2019 on each outcome; the few
+    fiscal-2020 reports filed before the rules took effect against those
+    filed after; how many sections have the headings the rules ask for; and
+    whether what was added for fiscal 2019 was still there a year later.
+    """
+    shares = [
+        "share_new",
+        "share_removed",
+        "share_near",
+        "growth",
+        "share_new_covid",
+        "share_new_ex_covid",
+    ]
+    paired = table[table["unique"] & table["filing_year"].isin([2018, 2019, 2020])]
+    by_year = {
+        str(year): {"filings": len(part)} | {s: float(part[s].mean()) for s in shares}
+        for year, part in paired.groupby("filing_year")
+    }
+    last = paired[paired["filing_year"] == 2020]
+    after = last["date_filed"] >= RULES_EFFECTIVE
+    rules = {
+        name: {"filings": len(part)} | {s: float(part[s].mean()) for s in shares}
+        for name, part in (("before", last[~after]), ("after", last[after]))
+    }
+
+    headings = {}
+    for year in (2018, 2019, 2020):
+        text = read_sentences(cfg, year, ["cik", "text"])
+        text = text[text["cik"].isin(paired.loc[paired["filing_year"] == year, "cik"])]
+        filings = text["cik"].nunique()
+        headings[str(year)] = {"filings": int(filings)} | {
+            kind: float(text.loc[has_heading(text["text"], kind), "cik"].nunique() / filings)
+            for kind in ("summary", "general")
+        }
+
+    chains = pd.read_parquet(cfg.interim_dir / "chains.parquet")
+    born = chains[chains["birth_year"] == 2019]
+    text = read_sentences(cfg, 2019, ["cik", "sent_idx", "text"])
+    born = born.merge(text, on=["cik", "sent_idx"])
+    covid = born["text"].str.contains(COVID).to_numpy()
+    earlier = chains[chains["birth_year"].isin(COMPARISON)]
+    return {
+        "by_year": by_year,
+        "fiscal_2020_by_rules": rules,
+        "share_filed_after_rules": float(after.mean()),
+        "headings": headings,
+        "added_in_2019": {
+            "mention_covid": survived_one_year(born[covid]) | {"sentences": int(covid.sum())},
+            "others": survived_one_year(born[~covid]) | {"sentences": int((~covid).sum())},
+        },
+        "added_in_2016_2018": survived_one_year(earlier) | {"sentences": len(earlier)},
+    }

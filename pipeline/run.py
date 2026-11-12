@@ -15,6 +15,7 @@ import pyarrow.parquet as pq
 from pipeline.candidates import build_candidates, summarize_candidates
 from pipeline.chains import build_chains
 from pipeline.config import load_config
+from pipeline.did_results import build_did_results
 from pipeline.embed import MODEL, build_embeddings, build_similarity
 from pipeline.explain_results import build_explain_results
 from pipeline.industry import SIC_DIVISIONS
@@ -286,6 +287,43 @@ def _explain(cfg, args) -> None:
             print(f"  {part:<10}{share['value']:.1%} ({share['low']:.1%}-{share['high']:.1%})")
 
 
+def _test2020(cfg, args) -> None:
+    path = build_did_results(cfg)
+    saved = json.loads(path.read_text())
+    print(f"wrote {path.relative_to(cfg.root)}")
+    sample = saved["sample"]
+    print(
+        f"sample: {sample['paired_filings']:,} paired filings for fiscal 2016-2019, "
+        f"{sample['december_year_end']:,} with a December year end, {sample['year_end_unchanged']:,} "
+        f"unchanged, {sample['single_matching_filing']:,} with one matching 10-K "
+        f"({sample['companies']:,} companies)"
+    )
+    for year, check in saved["exposure"].items():
+        if year != "by_week":
+            print(
+                f"  fiscal {year}: mention COVID, early {check['early']['mention']:.1%}, late {check['late']['mention']:.1%}"
+            )
+    print("difference-in-differences (late x fiscal 2019), with 95% intervals:")
+    for outcome, fit in saved["did"].items():
+        print(
+            f"  {outcome:<20}{fit['estimate']:+.4f} ({fit['low']:+.4f}, {fit['high']:+.4f})  p = {fit['p']:.3f}"
+        )
+    for outcome, fits in saved["placebos"].items():
+        print(
+            f"  placebos, {outcome}: "
+            + "; ".join(
+                f"{f['event_year']}: {f['estimate']:+.4f} ({f['low']:+.4f}, {f['high']:+.4f})"
+                for f in fits
+            )
+        )
+    for outcome, variants in saved["robustness"].items():
+        print(f"robustness, {outcome}:")
+        for name, fit in variants.items():
+            print(
+                f"  {name:<48}{fit['estimate']:+.4f} ({fit['low']:+.4f}, {fit['high']:+.4f})  n = {fit['filings']:,}"
+            )
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
@@ -303,6 +341,7 @@ STAGES = {
     "measure-report": _measure_report,
     "chains": _chains,
     "explain": _explain,
+    "test2020": _test2020,
 }
 
 
