@@ -144,37 +144,56 @@ def _judge(cfg, args) -> None:
     print(labels["label"].value_counts().to_string())
 
 
+def _tier_lines(makeup: dict) -> list[str]:
+    lines = []
+    for tier in ("near", "paraphrase", "new"):
+        row = makeup[tier]
+        lines.append(
+            f"  {tier:<11}same {row['same']:6.1%}  paraphrase {row['paraphrase']:6.1%}  "
+            f"different {row['different']:6.1%}  ({row['n']} pairs for {row['stands_for']:,.0f})"
+        )
+    return [*lines, f"  recall of carried-over pairs: {makeup['recall_carried']:.1%}"]
+
+
 def _thresholds(cfg, args) -> None:
     path = build_thresholds(cfg)
     saved = json.loads(path.read_text())
     print(f"wrote {path.relative_to(cfg.root)}")
-    print(f"tau_v = {saved['tau_v']:.3f} (F1 {saved['f1_v']:.3f} on the tuning half)")
-    print(f"tau_p = {saved['tau_p']:.3f} (F1 {saved['f1_p']:.3f} on the tuning half)")
+    print(f"tau_v = {saved['tau_v']:.3f} (F1 {saved['f1_v']:.3f} on the known-answer tuning half)")
+    print(
+        f"tau_p from the known-answer tuning half = {saved['tau_p_known_answer']:.3f} "
+        f"(F1 {saved['f1_p_known_answer']:.3f})"
+    )
+    print(f"tau_p in use = {saved['tau_p']:.3f}, from the {saved['tau_p_source']}")
     known = saved["known_answer"]
-    print(f"held-out half ({known['n']} pairs), how each kind was labeled:")
+    print(f"known-answer held-out half ({known['n']} pairs) at the thresholds in use:")
     for kind, counts in known["labeled"].items():
         print(f"  {kind:<16}" + "".join(f"{tier} {n:>4}   " for tier, n in counts.items()))
-    carried = known["carried_over"]
     for name in ("precision", "precision_without_hard", "recall"):
-        share = carried[name]
+        share = known["carried_over"][name]
         print(
             f"  carried over, {name}: {share['value']:.3f} ({share['low']:.3f}-{share['high']:.3f})"
         )
-    if "real_pairs" in saved:
-        real = saved["real_pairs"]
-        agree = real["agreement"]
+    if "real_pairs" not in saved:
+        return
+    real = saved["real_pairs"]
+    for version, agree in real["rounds"].items():
         print(
-            f"judges on {agree['n']} shared pairs: kappa {agree['kappa']:.3f} "
+            f"judges, rubric {version}, {agree['n']} shared pairs: kappa {agree['kappa']:.3f} "
             f"(carried over or not: {agree['kappa_carried']:.3f}), agreement {agree['agreement']:.1%}"
         )
-        print(f"real pairs, by {real['basis']} ({real['n']} pairs):")
-        for tier in ("near", "paraphrase", "new"):
-            row = real["makeup"][tier]
-            print(
-                f"  {tier:<11}same {row['same']:.1%}  paraphrase {row['paraphrase']:.1%}  "
-                f"different {row['different']:.1%}  ({row['n']} pairs for {row['stands_for']:,.0f})"
-            )
-        print(f"  recall of carried-over pairs: {real['makeup']['recall_carried']:.1%}")
+    print(f"real pairs judged by: {real['basis']} ({real['n']} pairs)")
+    print(f"at the known-answer tau_p ({saved['tau_p_known_answer']:.3f}):")
+    print("\n".join(_tier_lines(real["at_known_answer_tau_p"]["makeup"])))
+    tuned = real["tuned_on"]
+    print(
+        f"tau_p tuned on real pairs = {real['tau_p']:.3f} (F1 {real['f1_p']:.3f}; "
+        f"{tuned['pairs']} pairs under tau_v, {tuned['carried_over']} judged carried over):"
+    )
+    print("\n".join(_tier_lines(real["makeup"])))
+    for name, view in real["other_views"].items():
+        print(f"same thresholds, {name} ({view['n_pairs']} pairs):")
+        print("\n".join(_tier_lines(view)))
 
 
 def _labels(cfg, args) -> None:

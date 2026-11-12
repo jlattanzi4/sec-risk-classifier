@@ -170,14 +170,22 @@ def sample_real_pairs(cfg: Config, n: int = 2000, seed: int = 0) -> pd.DataFrame
     return pairs
 
 
-def judge_with_haiku(cfg: Config, call=claude_cli) -> pd.DataFrame:
-    """Judge 1: Claude Haiku labels every pair, 40 to a call, following the rubric."""
+RUBRIC = "v2"
+
+
+def judge_with_haiku(cfg: Config, call=claude_cli, rubric: str = RUBRIC) -> pd.DataFrame:
+    """Judge 1: Claude Haiku labels every pair, 40 to a call, following the rubric.
+
+    Each rubric version keeps its own prompts, replies and labels
+    (`raw/judge1_v2/`, `judge1_labels_v2.csv`), so an earlier round stays on
+    record beside the one in use.
+    """
     folder = cfg.validation_dir / "real_pairs"
     items = pd.read_csv(folder / "judge1_input.csv").to_dict("records")
     replies = run_batches(
         items,
-        prompt_file=folder / "rubric_v1.md",
-        out_dir=folder / "raw" / "judge1",
+        prompt_file=folder / f"rubric_{rubric}.md",
+        out_dir=folder / "raw" / f"judge1_{rubric}",
         model="haiku",
         batch_size=40,
         required=("label",),
@@ -187,5 +195,5 @@ def judge_with_haiku(cfg: Config, call=claude_cli) -> pd.DataFrame:
         {"id": [r["id"] for r in replies], "label": [r["label"].strip().lower() for r in replies]}
     )
     labels = labels[labels["label"].isin(LABELS)]
-    labels.to_csv(folder / "judge1_labels.csv", index=False)
+    labels.to_csv(folder / f"judge1_labels_{rubric}.csv", index=False)
     return labels

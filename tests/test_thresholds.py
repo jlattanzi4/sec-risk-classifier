@@ -152,7 +152,7 @@ def write_real_pairs(cfg, judge2):
         "paraphrase",
     ]
     pd.DataFrame({"id": pairs["id"], "label": judge1}).to_csv(
-        folder / "judge1_labels.csv", index=False
+        folder / "judge1_labels_v2.csv", index=False
     )
     pd.DataFrame({"id": list(judge2), "label": list(judge2.values())}).to_csv(
         folder / "judge2_labels.csv", index=False
@@ -166,7 +166,7 @@ def test_when_the_judges_agree_judge_one_s_labels_are_used_for_every_pair(cfg):
     result = evaluate_real(cfg, tau_v=0.3, tau_p=0.9, n_boot=20)
     assert result["agreement"]["kappa"] == 1.0 and result["agreement"]["n"] == 4
     assert result["basis"] == "judge 1 on all pairs" and result["n"] == 8
-    assert result["makeup"]["near"]["same"] == pytest.approx(0.75)
+    assert result["at_known_answer_tau_p"]["makeup"]["near"]["same"] == pytest.approx(0.75)
 
 
 def test_when_they_do_not_only_pairs_they_agree_on_are_used_and_reweighted(cfg):
@@ -175,8 +175,9 @@ def test_when_they_do_not_only_pairs_they_agree_on_are_used_and_reweighted(cfg):
     assert result["agreement"]["kappa"] < 0.7
     assert result["basis"] == "pairs both judges agree on" and result["n"] == 2
     # rp1 now stands for its whole cell of 40, and rp5 for its cell of 400.
-    assert result["makeup"]["near"]["stands_for"] == pytest.approx(40)
-    assert result["makeup"]["new"]["stands_for"] == pytest.approx(400)
+    makeup = result["at_known_answer_tau_p"]["makeup"]
+    assert makeup["near"]["stands_for"] == pytest.approx(40)
+    assert makeup["new"]["stands_for"] == pytest.approx(400)
 
 
 def test_bootstrap_intervals_bracket_the_estimate():
@@ -195,3 +196,60 @@ def test_bootstrap_intervals_bracket_the_estimate():
     point = tier_makeup(pairs, 0.3, 0.9)["near"]["same"]
     low, high = intervals["near"]["same"]
     assert low < point < high and high - low < 0.25
+
+
+def test_weights_change_which_threshold_is_best():
+    # One heavy negative at 0.5 outweighs the light positive at 0.4 that a low cut would save.
+    scores = pd.Series([0.2, 0.4, 0.5, 0.8])
+    positive = pd.Series([False, True, False, True])
+    assert best_threshold(scores, positive)[0] == pytest.approx(0.3)
+    assert best_threshold(scores, positive, weights=pd.Series([1.0, 1.0, 50.0, 10.0]))[
+        0
+    ] == pytest.approx(0.65)
+
+
+def write_two_rounds(cfg):
+    """Ten pairs: under rubric v1 judge 1 disagrees with judge 2 on most, under v2 on none."""
+    folder = cfg.validation_dir / "real_pairs"
+    folder.mkdir(parents=True)
+    cos = [0.60, 0.70, 0.80, 0.85, 0.88, 0.92, 0.95, 0.97, 0.99, 0.99]
+    truth = ["different"] * 5 + ["paraphrase"] * 3 + ["same", "same"]
+    pairs = pd.DataFrame(
+        {
+            "id": [f"rp{i}" for i in range(10)],
+            "stratum": ["a"] * 5 + ["b"] * 5,
+            "pair_j": [0.0] * 8 + [0.9, 0.9],
+            "pair_cos": cos,
+            "weight": [100.0] * 5 + [10.0] * 5,
+        }
+    )
+    pairs.to_csv(folder / "pairs.csv", index=False)
+    pd.DataFrame({"id": pairs["id"], "label": ["different"] * 9 + ["same"]}).to_csv(
+        folder / "judge1_labels_v1.csv", index=False
+    )
+    pd.DataFrame({"id": pairs["id"], "label": truth}).to_csv(
+        folder / "judge1_labels_v2.csv", index=False
+    )
+    pd.DataFrame({"id": pairs["id"], "label": truth}).to_csv(
+        folder / "judge2_labels.csv", index=False
+    )
+
+
+def test_both_rounds_of_judging_are_reported_and_the_latest_is_used(cfg):
+    write_two_rounds(cfg)
+    result = evaluate_real(cfg, tau_v=0.3, tau_p=0.75, n_boot=20)
+    assert result["rounds"]["v1"]["kappa"] < 0.5 and result["rounds"]["v2"]["kappa"] == 1.0
+    assert result["rubric"] == "v2" and result["basis"] == "judge 1 on all pairs"
+
+
+def test_the_cosine_threshold_is_retuned_on_real_pairs(cfg):
+    write_two_rounds(cfg)
+    result = evaluate_real(cfg, tau_v=0.3, tau_p=0.75, n_boot=20)
+    # At 0.75 the rewording tier takes in three different pairs (0.80, 0.85, 0.88) worth 300.
+    assert result["at_known_answer_tau_p"]["makeup"]["paraphrase"]["different"] == pytest.approx(
+        300 / 330
+    )
+    # The best cut on the real pairs lies between the last different (0.88) and the first reworded (0.92).
+    assert result["tau_p"] == pytest.approx(0.90)
+    assert result["makeup"]["paraphrase"]["different"] == 0.0
+    assert result["tuned_on"] == {"pairs": 8, "carried_over": 3}
