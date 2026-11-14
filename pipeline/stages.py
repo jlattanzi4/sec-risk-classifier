@@ -13,6 +13,7 @@ from pipeline.config import Config
 from pipeline.edgar import fetch
 from pipeline.filings import match_filing_dates, read_ten_k_filings
 from pipeline.industry import SUBMISSIONS_URL, read_sic_codes, sic_division
+from pipeline.io import write_parquet
 from pipeline.sentences import is_debris, segment, sentence_frame
 
 CORPUS = Path("data/processed/risk_factors_2006_2020.parquet")
@@ -34,14 +35,6 @@ FILINGS_COLUMNS = [
 def _cache_path(cfg: Config, url: str) -> Path:
     """Where a download lives: its path under EDGAR's Archives, inside raw_dir."""
     return cfg.raw_dir / url.split("/Archives/edgar/", 1)[1]
-
-
-def _write_parquet(df: pd.DataFrame, path: Path) -> None:
-    """Write through a temporary name so an interrupted run never leaves a partial file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    part = path.with_name(path.name + ".part")
-    df.to_parquet(part, index=False, compression="zstd")
-    part.replace(path)
 
 
 def build_filings(cfg: Config, force: bool = False) -> Path:
@@ -66,7 +59,7 @@ def build_filings(cfg: Config, force: bool = False) -> Path:
         None if pd.isna(code) else sic_division(int(code)) for code in matched["sic"]
     ]
 
-    _write_parquet(matched[FILINGS_COLUMNS], out)
+    write_parquet(matched[FILINGS_COLUMNS], out)
     return out
 
 
@@ -100,7 +93,7 @@ def build_sentences(cfg: Config, workers: int = 8, force: bool = False) -> Path:
     corpus = cfg.root / CORPUS
     years = sorted(set(pq.read_table(corpus, columns=["filing_year"])["filing_year"].to_pylist()))
 
-    with ProcessPoolExecutor(max_workers=workers) if workers > 1 else _NoPool() as pool:
+    with ProcessPoolExecutor(max_workers=workers) if workers > 1 else NoPool() as pool:
         for year in years:
             out = out_dir / f"year={year}.parquet"
             if out.exists() and not force:
@@ -137,7 +130,7 @@ def build_sentences(cfg: Config, workers: int = 8, force: bool = False) -> Path:
     return out_dir
 
 
-class _NoPool:
+class NoPool:
     """`workers=1`: run in this process, with the same interface as the pool."""
 
     def __enter__(self):

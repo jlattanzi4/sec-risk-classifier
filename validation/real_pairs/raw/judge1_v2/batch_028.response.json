@@ -1,0 +1,11 @@
+{
+ "result": "```json\n[\n  {\"id\": \"rp1339\", \"label\": \"same\"},\n  {\"id\": \"rp0380\", \"label\": \"different\"},\n  {\"id\": \"rp0864\", \"label\": \"same\"},\n  {\"id\": \"rp0787\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp0101\", \"label\": \"different\"},\n  {\"id\": \"rp1545\", \"label\": \"different\"},\n  {\"id\": \"rp1566\", \"label\": \"same\"},\n  {\"id\": \"rp1248\", \"label\": \"same\"},\n  {\"id\": \"rp1660\", \"label\": \"same\"},\n  {\"id\": \"rp1360\", \"label\": \"same\"},\n  {\"id\": \"rp0877\", \"label\": \"different\"},\n  {\"id\": \"rp1264\", \"label\": \"same\"},\n  {\"id\": \"rp1942\", \"label\": \"same\"},\n  {\"id\": \"rp0566\", \"label\": \"same\"},\n  {\"id\": \"rp1691\", \"label\": \"same\"},\n  {\"id\": \"rp1481\", \"label\": \"same\"},\n  {\"id\": \"rp0798\", \"label\": \"same\"},\n  {\"id\": \"rp0523\", \"label\": \"different\"},\n  {\"id\": \"rp0626\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp0495\", \"label\": \"same\"},\n  {\"id\": \"rp0158\", \"label\": \"different\"},\n  {\"id\": \"rp0790\", \"label\": \"same\"},\n  {\"id\": \"rp1663\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp1513\", \"label\": \"different\"},\n  {\"id\": \"rp0366\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp0228\", \"label\": \"different\"},\n  {\"id\": \"rp0912\", \"label\": \"same\"},\n  {\"id\": \"rp0417\", \"label\": \"different\"},\n  {\"id\": \"rp0742\", \"label\": \"same\"},\n  {\"id\": \"rp0079\", \"label\": \"same\"},\n  {\"id\": \"rp0492\", \"label\": \"different\"},\n  {\"id\": \"rp1884\", \"label\": \"different\"},\n  {\"id\": \"rp1779\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp0824\", \"label\": \"same\"},\n  {\"id\": \"rp1375\", \"label\": \"different\"},\n  {\"id\": \"rp1268\", \"label\": \"same\"},\n  {\"id\": \"rp1673\", \"label\": \"different\"},\n  {\"id\": \"rp1908\", \"label\": \"paraphrase\"},\n  {\"id\": \"rp1396\", \"label\": \"same\"},\n  {\"id\": \"rp1024\", \"label\": \"different\"}\n]\n```",
+ "stop_reason": "end_turn",
+ "duration_ms": 15625,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 7833,
+   "output_tokens": 4843
+  }
+ }
+}

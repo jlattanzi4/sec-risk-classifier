@@ -5,10 +5,15 @@ description = "How much of a 10-K risk section is boilerplate, and what makes co
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "model2vec>=0.10.0",
+    "numpy>=2.5.4",
     "pandas>=3.1.1",
     "pyarrow>=26.0.1",
     "python-dotenv>=1.2.4",
     "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "sentence-transformers>=3",
 ]
 
 [tool.pytest.ini_options]
