@@ -129,6 +129,18 @@ def _label_shares(scores: pd.DataFrame, tau_v: float, tau_p: float) -> dict:
     return {name: float((labels == name).mean()) for name in CURRENT_LABELS} | {"n": len(current)}
 
 
+def related_filers(filings: pd.DataFrame, cik: int, year: int) -> set[int]:
+    """The company and every filer grouped with it in `year` or the year before.
+
+    Groups are found a year at a time and named for their lowest CIK, so a
+    group's name changes when its members do. Being in the company's group in
+    either year is what makes a filer kin, whatever the group was called.
+    """
+    both = filings[filings["filing_year"].isin([year, year - 1])]
+    own = both.loc[both["cik"] == cik, ["filing_year", "group"]]
+    return set(both.merge(own, on=["filing_year", "group"])["cik"])
+
+
 def stranger_filings(
     cfg: Config, tau_v: float, tau_p: float, embedder: Embedder, n_pairs: int = 500, seed: int = 0
 ) -> dict:
@@ -137,7 +149,9 @@ def stranger_filings(
     For `n_pairs` sampled filings: the label shares against the company's own
     previous filing (what the pipeline reports), against the previous-year
     filing of a random unrelated company, and against one from a random
-    unrelated company in the same SIC division.
+    unrelated company in the same SIC division. A filing with no unrelated
+    company in its division that year is left out; `n_filings` is how many
+    were scored, from `n_companies` companies.
     """
     filings = pd.read_parquet(
         cfg.interim_dir / "filings.parquet", columns=["cik", "filing_year", "sic_division"]
@@ -157,7 +171,8 @@ def stranger_filings(
         cur_parts = []
         prev_parts: dict[str, list[pd.DataFrame]] = {kind: [] for kind in kinds}
         for row in rows.itertuples():
-            unrelated = last_year[(last_year["cik"] != row.cik) & (last_year["group"] != row.group)]
+            kin = related_filers(filings, row.cik, year)
+            unrelated = last_year[~last_year["cik"].isin(kin)]
             same_division = unrelated[unrelated["sic_division"] == row.sic_division]
             if same_division.empty:
                 continue
@@ -175,8 +190,8 @@ def stranger_filings(
         for kind in kinds:
             scores[kind].append(score_pairs(cur, pd.concat(prev_parts[kind]), embedder))
     out = {kind: _label_shares(pd.concat(parts), tau_v, tau_p) for kind, parts in scores.items()}
-    out["n_pairs"] = int(pd.concat(scores["own"]).groupby("cik").ngroups) if scores["own"] else 0
     out["n_filings"] = int(sum(part["cik"].nunique() for part in scores["own"]))
+    out["n_companies"] = int(pd.concat(scores["own"])["cik"].nunique()) if scores["own"] else 0
     return out
 
 
