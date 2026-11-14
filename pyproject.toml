@@ -5,8 +5,10 @@ description = "How much of a 10-K risk section is boilerplate, and what makes co
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "lifelines>=0.30.0",
     "model2vec>=0.10.0",
     "numpy>=2.5.4",
+    "numpyro>=0.22.0",
     "pandas>=3.1.1",
     "pyarrow>=26.0.1",
     "python-dotenv>=1.2.4",
