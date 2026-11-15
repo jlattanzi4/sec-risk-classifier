@@ -112,7 +112,7 @@ def test_every_sentence_of_the_example_is_drawn(report, page):
 
 
 def test_every_chart_has_a_table_of_its_numbers(page):
-    figures = re.findall(r"<figure.*?</figure>", page, flags=re.S)
+    figures = re.findall(r"<figure.*?</figure>", page, flags=re.DOTALL)
     charts = [figure for figure in figures if 'class="chart"' in figure]
     assert len(charts) == page.count('class="chart"') >= 12
     for figure in charts:
@@ -145,7 +145,7 @@ TYPED = [
 
 def test_the_template_holds_no_numbers_of_its_own(template):
     body = template.split("<body>", 1)[1]
-    body = re.sub(r"<script.*?</script>", "", body, flags=re.S)
+    body = re.sub(r"<script.*?</script>", "", body, flags=re.DOTALL)
     body = re.sub(r"%%\w+%%", "", body)
     body = re.sub(r"<[^>]+>", " ", body)  # tags and their attributes
     for allowed in TYPED:

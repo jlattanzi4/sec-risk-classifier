@@ -24,8 +24,6 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-# The old modeling code is left alone until milestone 5 removes it.
-extend-exclude = ["src", "notebooks"]
 
 [tool.ruff.lint]
 # Long word lists read better as one split string than as a list of quoted words.

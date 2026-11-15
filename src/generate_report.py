@@ -183,7 +183,7 @@ def table(head: list[str], rows: list[list[str]], numeric_from: int = 1) -> str:
 
     def cells(tag: str, values: list[str]) -> str:
         return "".join(
-            f'<{tag}{" class=\"num\"" if i >= numeric_from else ""}>{value}</{tag}>'
+            f"<{tag}{' class="num"' if i >= numeric_from else ''}>{value}</{tag}>"
             for i, value in enumerate(values)
         )
 
@@ -351,10 +351,7 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
             ["Fiscal year", "Filings", "Kept", "Edited", "Reworded", "New", "Removed"],
             [
                 [str(y["year"]), count(y["filings"])]
-                + [
-                    pct(y["pooled"][s])
-                    for s in ("exact", "near", "paraphrase", "new", "removed")
-                ]
+                + [pct(y["pooled"][s]) for s in ("exact", "near", "paraphrase", "new", "removed")]
                 for y in years
             ],
         ),
@@ -366,9 +363,21 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
             ],
         ),
         "table_tiers": table(
-            ["The matcher said", "Judged right", "95% interval", "Pairs", "Sentences they stand for"],
             [
-                [name, pct(right), span(*interval), count(makeup[key]["n"]), count(makeup[key]["stands_for"])]
+                "The matcher said",
+                "Judged right",
+                "95% interval",
+                "Pairs",
+                "Sentences they stand for",
+            ],
+            [
+                [
+                    name,
+                    pct(right),
+                    span(*interval),
+                    count(makeup[key]["n"]),
+                    count(makeup[key]["stands_for"]),
+                ]
                 for name, key, right, interval in tiers
             ],
         ),
@@ -395,7 +404,11 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
             ],
         ),
         "table_peers": table(
-            ["Fiscal year", "Full sentences", f"Filed by {peers['primary_k']} or more other companies"],
+            [
+                "Fiscal year",
+                "Full sentences",
+                f"Filed by {peers['primary_k']} or more other companies",
+            ],
             [[str(y["year"]), count(y["full_sentences"]), pct(y["full"][k])] for y in peer_years],
         ),
     }
@@ -408,11 +421,22 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
         "histogram": shares["share_new_histogram"],
         "median_new": spread["new"]["p50"],
         "tiers": [
-            {"name": name, "value": right, "low": interval[0], "high": interval[1], "n": makeup[key]["n"]}
+            {
+                "name": name,
+                "value": right,
+                "low": interval[0],
+                "high": interval[1],
+                "n": makeup[key]["n"],
+            }
             for name, key, right, interval in tiers
         ],
         "cosine": [
-            {"low": band["low"], "high": band["high"], "n": band["n"], "carried": band["same"] + band["paraphrase"]}
+            {
+                "low": band["low"],
+                "high": band["high"],
+                "n": band["n"],
+                "carried": band["same"] + band["paraphrase"],
+            }
             for band in real["by_cosine"]
         ],
         "tau_p": measure["tau_p"],
@@ -508,7 +532,14 @@ def explain_parts(explain: dict) -> tuple[dict, dict]:
         "var_company_logit": pct(logit["company"]["value"], 0),
         "var_within_logit": pct(logit["residual"]["value"], 0),
         "table_survival": table(
-            ["Filings since added", "Still watched", "Cut at the next filing", "All still there", "Shared", "The company's own"],
+            [
+                "Filings since added",
+                "Still watched",
+                "Cut at the next filing",
+                "All still there",
+                "Shared",
+                "The company's own",
+            ],
             [
                 [
                     str(age),
@@ -524,14 +555,32 @@ def explain_parts(explain: dict) -> tuple[dict, dict]:
         "table_hazard": table(
             ["A sentence that is...", "Hazard ratio", "95% interval"],
             [
-                [named(name), ratio(ratios[name]["value"]), span(ratios[name]["low"], ratios[name]["high"], ratio)]
-                for name in [*rows, *(n for n in HAZARD_TERMS if n.startswith("words") and n in ratios), *born]
+                [
+                    named(name),
+                    ratio(ratios[name]["value"]),
+                    span(ratios[name]["low"], ratios[name]["high"], ratio),
+                ]
+                for name in [
+                    *rows,
+                    *(n for n in HAZARD_TERMS if n.startswith("words") and n in ratios),
+                    *born,
+                ]
             ],
         ),
         "table_variance": table(
-            ["Share of the variation that belongs to", "Estimate", "95% interval", "On a logit scale"],
             [
-                [label, pct(primary[key]["value"]), span(primary[key]["low"], primary[key]["high"]), pct(logit[key]["value"])]
+                "Share of the variation that belongs to",
+                "Estimate",
+                "95% interval",
+                "On a logit scale",
+            ],
+            [
+                [
+                    label,
+                    pct(primary[key]["value"]),
+                    span(primary[key]["low"], primary[key]["high"]),
+                    pct(logit[key]["value"]),
+                ]
                 for key, label in VARIANCE_PARTS.items()
             ],
         ),
@@ -539,17 +588,32 @@ def explain_parts(explain: dict) -> tuple[dict, dict]:
     data = {
         "survival": {
             name: [
-                {"age": row["age"], "survival": row["survival"], "low": row["low"], "high": row["high"]}
+                {
+                    "age": row["age"],
+                    "survival": row["survival"],
+                    "low": row["low"],
+                    "high": row["high"],
+                }
                 for row in group["curve"]
             ]
             for name, group in (("shared", shared), ("own", own))
         },
         "hazard": [
-            {"name": named(name), "value": ratios[name]["value"], "low": ratios[name]["low"], "high": ratios[name]["high"]}
+            {
+                "name": named(name),
+                "value": ratios[name]["value"],
+                "low": ratios[name]["low"],
+                "high": ratios[name]["high"],
+            }
             for name in rows
         ],
         "variance": [
-            {"name": label, "value": primary[key]["value"], "low": primary[key]["low"], "high": primary[key]["high"]}
+            {
+                "name": label,
+                "value": primary[key]["value"],
+                "low": primary[key]["low"],
+                "high": primary[key]["high"],
+            }
             for key, label in VARIANCE_PARTS.items()
         ],
     }
@@ -578,7 +642,12 @@ def covid_parts(test: dict) -> tuple[dict, dict]:
     weeks = test["event_study"]["share_new"]
 
     def estimate_row(name: str, fit: dict) -> list[str]:
-        return [name, points(fit["estimate"]), span(fit["low"], fit["high"], points), count(fit["filings"])]
+        return [
+            name,
+            points(fit["estimate"]),
+            span(fit["low"], fit["high"], points),
+            count(fit["filings"]),
+        ]
 
     values = {
         "event_year": str(did["share_new"]["event_year"]),
@@ -623,7 +692,12 @@ def covid_parts(test: dict) -> tuple[dict, dict]:
             [estimate_row(name, did[key]) for name, key in outcomes],
         ),
         "table_weeks": table(
-            ["Weeks from 11 March", "Fiscal 2019 filings", "New sentences (points)", "95% interval"],
+            [
+                "Weeks from 11 March",
+                "Fiscal 2019 filings",
+                "New sentences (points)",
+                "95% interval",
+            ],
             [
                 [
                     week["bin"].replace("-", MINUS),
@@ -660,19 +734,38 @@ def covid_parts(test: dict) -> tuple[dict, dict]:
     }
     data = {
         "did": [
-            {"name": name, "value": did[key]["estimate"], "low": did[key]["low"], "high": did[key]["high"]}
+            {
+                "name": name,
+                "value": did[key]["estimate"],
+                "low": did[key]["low"],
+                "high": did[key]["high"],
+            }
             for name, key in outcomes
         ],
         "weeks": [
-            {"name": week["bin"].replace("-", MINUS), "value": week["estimate"], "low": week["low"], "high": week["high"], "n": week["n_event"]}
+            {
+                "name": week["bin"].replace("-", MINUS),
+                "value": week["estimate"],
+                "low": week["low"],
+                "high": week["high"],
+                "n": week["n_event"],
+            }
             for week in weeks
         ],
         "after": [
-            {"name": year, "new": by_year[year]["share_new"], "removed": by_year[year]["share_removed"]}
+            {
+                "name": year,
+                "new": by_year[year]["share_new"],
+                "removed": by_year[year]["share_removed"],
+            }
             for year in year_keys
         ]
         + [
-            {"name": f"{year_keys[-1]}, {when} the rules", "new": rules[when]["share_new"], "removed": rules[when]["share_removed"]}
+            {
+                "name": f"{year_keys[-1]}, {when} the rules",
+                "new": rules[when]["share_new"],
+                "removed": rules[when]["share_removed"],
+            }
             for when in ("before", "after")
         ],
     }
