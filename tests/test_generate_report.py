@@ -207,3 +207,43 @@ def test_the_readme_template_holds_no_numbers_of_its_own():
     for allowed in README_TYPED:
         body = body.replace(allowed, "")
     assert re.findall(r"\S*\d\S*", body) == []
+
+
+def test_the_page_s_claim_about_the_logit_scale_is_checked_against_the_data(report):
+    # The caption says the same two parts are largest on either scale. If a rerun changed
+    # that, the build must stop, not publish the sentence.
+    explain = json.loads(json.dumps(report["explain"]))
+    explain_parts(explain)
+    logit = explain["variance"]["logit"]["share"]
+    logit["company"]["value"], logit["division"]["value"] = 0.05, 0.25
+    with pytest.raises(ValueError, match="two largest"):
+        explain_parts(explain)
+
+
+def break_the_main_estimate(report):
+    report["test2020"]["did"]["share_removed"]["low"] = 0.001
+
+
+def break_the_fixed_effects_caution(report):
+    report["test2020"]["robustness"]["share_new"]["no company fixed effects"]["low"] = -0.001
+
+
+def break_the_fading_of_shared_sentences(report):
+    report["explain"]["hazard"]["by_age"]["hazard_ratios"]["peer_shared, ages 4+"]["high"] = 0.99
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        break_the_main_estimate,
+        break_the_fixed_effects_caution,
+        break_the_fading_of_shared_sentences,
+    ],
+)
+def test_a_sentence_the_data_no_longer_supports_stops_the_build(report, template, change):
+    # "None can be told from zero", "its interval excludes zero" and "no different from any
+    # other sentence" are claims in prose. Each is checked when the page is built.
+    changed = json.loads(json.dumps(report))
+    change(changed)
+    with pytest.raises(ValueError, match="the page says"):
+        build(changed, template)

@@ -495,6 +495,21 @@ def explain_parts(explain: dict) -> tuple[dict, dict]:
             return f"Added for fiscal {term[6:].replace('-', '–')}"
         return HAZARD_TERMS[term]
 
+    oldest = ratios[peer_terms[-1]]
+    if len(peer_terms) > 1 and not oldest["low"] <= 1 <= oldest["high"]:
+        raise ValueError(
+            "the page says a shared sentence ends up no different from any other; its last "
+            f"hazard ratio is {oldest['low']:.2f} to {oldest['high']:.2f}"
+        )
+
+    def largest_two(shares: dict) -> list[str]:
+        return sorted(shares, key=lambda part: -shares[part]["value"])[:2]
+
+    if largest_two(primary) != largest_two(logit):
+        raise ValueError(
+            "the page says the two largest parts of the variation are the same on both scales; "
+            f"they are {largest_two(primary)} and {largest_two(logit)}"
+        )
     rows = [name for name in CHARTED_TERMS if name in ratios]
     by_age = {row["age"]: row for row in overall}
     own_by_age = {row["age"]: row for row in own["curve"]}
@@ -640,6 +655,16 @@ def covid_parts(test: dict) -> tuple[dict, dict]:
     placebo_new = test["placebos"]["share_new"]
     placebo_all = [fit for fits in test["placebos"].values() for fit in fits]
     weeks = test["event_study"]["share_new"]
+
+    told_from_zero = [name for name, key in outcomes if did[key]["low"] > 0 or did[key]["high"] < 0]
+    if told_from_zero:
+        raise ValueError(
+            f"the page says none of the main estimates can be told from zero; {told_from_zero} can"
+        )
+    if no_fixed["low"] <= 0 <= no_fixed["high"]:
+        raise ValueError(
+            "the page says the estimate without company fixed effects excludes zero; it does not"
+        )
 
     def estimate_row(name: str, fit: dict) -> list[str]:
         return [
