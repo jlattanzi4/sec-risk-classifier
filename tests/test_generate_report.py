@@ -6,9 +6,13 @@ import pytest
 from src.generate_report import (
     DATA,
     LINE_CHARS,
+    OUTPUT,
     PAGE_LINES,
+    README,
+    README_TEMPLATE,
     TEMPLATE,
     build,
+    build_readme,
     explain_parts,
     lay_out,
     reading_order,
@@ -164,3 +168,42 @@ def test_every_number_in_the_survival_section_is_from_the_results(report):
         sum(part["value"] for part in explain["variance"]["share"]["share"].values())
     )
     assert len(data["hazard"]) == len({row["name"] for row in data["hazard"]}) >= 5
+
+
+def test_the_committed_page_is_what_the_generator_writes(page):
+    assert OUTPUT.read_text() == page
+
+
+def test_the_committed_readme_is_what_the_generator_writes(report):
+    assert README.read_text() == build_readme(report, README_TEMPLATE.read_text())
+
+
+# The README may name versions, hardware and durations; its findings come from the data.
+README_TYPED = [
+    "10-K",
+    "Item 1A",
+    "95% interval",
+    "3.12",
+    "M3",
+    "v1-original",
+    "jlattanzi4",
+    "issues/1",
+    "issues/2",
+    "two hours",
+    "51%",
+    "21%",
+    "71.2%",
+    "test-2020",
+    "test2020",
+    "November 2026",
+    "[#2]",
+    "[#1]",
+    "F1",
+]
+
+
+def test_the_readme_template_holds_no_numbers_of_its_own():
+    body = re.sub(r"%%\w+%%", "", README_TEMPLATE.read_text())
+    for allowed in README_TYPED:
+        body = body.replace(allowed, "")
+    assert re.findall(r"\S*\d\S*", body) == []

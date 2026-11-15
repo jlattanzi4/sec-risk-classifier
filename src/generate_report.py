@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "data" / "report.json"
 TEMPLATE = ROOT / "src" / "report_template.html"
 OUTPUT = ROOT / "docs" / "report.html"
+README_TEMPLATE = ROOT / "src" / "readme_template.md"
+README = ROOT / "README.md"
 
 LABELS = {
     "exact": "Kept word for word",
@@ -677,8 +679,8 @@ def covid_parts(test: dict) -> tuple[dict, dict]:
     return values, data
 
 
-def build(report: dict, template: str) -> str:
-    """Fill the template from the report data. Raises if a placeholder is left unfilled."""
+def collect(report: dict) -> tuple[dict[str, str], dict[str, object]]:
+    """Every value the page and the README can ask for, and the data the charts draw."""
     values: dict[str, str] = {}
     charts: dict[str, object] = {}
     for name, parts in (
@@ -690,20 +692,37 @@ def build(report: dict, template: str) -> str:
         section_values, section_data = parts(report[name])
         values |= section_values
         charts[name] = section_data
-    values["data_json"] = json.dumps(charts, separators=(",", ":"), ensure_ascii=False).replace(
-        "</", "<\\/"
-    )
-    page = re.sub(r"%%(\w+)%%", lambda m: values.get(m.group(1), m.group(0)), template)
-    missing = sorted(set(re.findall(r"%%(\w+)%%", page)))
+    return values, charts
+
+
+def fill(template: str, values: dict[str, str]) -> str:
+    """Replace each %%name%% with its value. Raises, naming them, if any has none."""
+    text = re.sub(r"%%(\w+)%%", lambda m: values.get(m.group(1), m.group(0)), template)
+    missing = sorted(set(re.findall(r"%%(\w+)%%", text)))
     if missing:
         raise KeyError(f"the template asks for values the generator doesn't have: {missing}")
-    return page
+    return text
+
+
+def build(report: dict, template: str) -> str:
+    """The report page: the template filled from the report data."""
+    values, charts = collect(report)
+    data_json = json.dumps(charts, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
+    return fill(template, values | {"data_json": data_json})
+
+
+def build_readme(report: dict, template: str) -> str:
+    """The README, with its findings filled from the same data as the page."""
+    values, _ = collect(report)
+    return fill(template, {name: html.unescape(value) for name, value in values.items()})
 
 
 def main() -> None:
-    page = build(json.loads(DATA.read_text()), TEMPLATE.read_text())
+    report = json.loads(DATA.read_text())
+    page = build(report, TEMPLATE.read_text())
     OUTPUT.write_text(page)
-    print(f"wrote {OUTPUT.relative_to(ROOT)} ({len(page) / 1e3:,.0f} KB)")
+    README.write_text(build_readme(report, README_TEMPLATE.read_text()))
+    print(f"wrote {OUTPUT.relative_to(ROOT)} ({len(page) / 1e3:,.0f} KB) and README.md")
 
 
 if __name__ == "__main__":
