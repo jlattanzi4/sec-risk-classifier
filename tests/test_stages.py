@@ -173,7 +173,7 @@ def test_build_sentences_on_fixture(cfg, workers):
     # The empty filing contributes no rows; the table row is dropped as debris.
     assert 1018724 not in set(df["cik"])
     assert df[df["cik"] == 1606163]["text"].tolist() == ["Our insurance may not cover every loss."]
-    # The same sentence a year apart shares a hash: the join milestone 2 is built on.
+    # The same sentence a year apart shares a hash: the join the matching is built on.
     carried = df[df["text"] == "We depend on a small number of customers."]
     assert carried["filing_year"].tolist() == [2019, 2020]
     assert carried["norm_hash"].nunique() == 1

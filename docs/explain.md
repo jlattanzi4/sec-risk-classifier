@@ -1,6 +1,6 @@
 # How long does a risk sentence last, and what drives rewriting?
 
-Milestone 3: once a company adds a sentence to its risk section, how long does it stay, what makes it stay longer, and how much of a filing's rewriting belongs to the company, its industry and the year. Every result here is in `results/explain.json`, written by:
+Once a company adds a sentence to its risk section, how long does it stay, what makes it stay longer, and how much of a filing's rewriting belongs to the company, its industry and the year. Every result here is in `results/explain.json`, written by:
 
 ```
 uv run python -m pipeline.run chains explain
@@ -8,7 +8,7 @@ uv run python -m pipeline.run chains explain
 
 `chains` takes a minute. `explain` takes 45 minutes on an M3 laptop, nearly all of it the two hazard models.
 
-The decision rules (what counts as a failed proportional-hazards check and what follows, the convergence standard for the Bayesian fits, the primary scale for the variance decomposition) were fixed in `docs/superpowers/plans/2026-11-11-m3-explain.md` before any result.
+The decision rules (what counts as a failed proportional-hazards check and what follows, the convergence standard for the Bayesian fits, the primary scale for the variance decomposition) were fixed in the analysis plan, `docs/superpowers/plans/2026-11-11-m3-explain.md`, before any result.
 
 ## The answer
 
@@ -20,7 +20,7 @@ The decision rules (what counts as a failed proportional-hazards check and what 
 
 ## What was followed
 
-A chain starts where a sentence is labeled new (milestone 2) and follows the sentence's best match through each later filing of the same company. It ends when a filing has no match for it (removed), or when the data stop: the company's last filing, a missing year, or fiscal 2020 (censored). Time is counted in filings.
+A chain starts where a sentence is labeled new ([measurement](measurement.md)) and follows the sentence's best match through each later filing of the same company. It ends when a filing has no match for it (removed), or when the data stop: the company's last filing, a missing year, or fiscal 2020 (censored). Time is counted in filings.
 
 | | Sentences |
 |---|---|
@@ -73,7 +73,7 @@ The table above compares one thing at a time, and the things overlap: shared sen
 
 A Cox model with a test of proportional hazards, on 123,606 watched chains from 1,510 sampled companies, with errors clustered by company. It puts the hazard ratio for a shared sentence at 0.63 (0.57 to 0.70) and **rejects proportional hazards for it** (p = 0.0001): the effect of being shared is not the same at every age. By the rule fixed in the plan, the reported model therefore lets that effect differ by age.
 
-One trap, recorded because it cost a wrong answer first: lifelines' default for this test ranks the event times, ranks break ties by row order, and with annual data nearly every time is tied. The rows were in company order, so every company-level covariate appeared to change with age. The test here uses the Kaplan–Meier transform, which has no such dependence.
+One trap worth recording: lifelines' default for this test ranks the event times, ranks break ties by row order, and with annual data nearly every time is tied. With the rows in company order, every company-level covariate appears to change with age. The test here uses the Kaplan–Meier transform, which has no such dependence.
 
 ### The reported model
 
@@ -120,7 +120,7 @@ A different question, about filings and not sentences: each of the 47,643 paired
 
 **Rewriting is an event, not a trait.** Knowing which company filed tells you a ninth of what there is to know about how much of its section is new. Most of the variation is a company rewriting heavily one year and hardly at all the next.
 
-The year effects are small beside that but they are the ones milestone 2 saw: fiscal 2008 is 6.5 points above the average year, 2016 is 2.8 below, and 2020 is 2.0 above.
+The year effects are small beside that but they are the ones the yearly shares show: fiscal 2008 is 6.5 points above the average year, 2016 is 2.8 below, and 2020 is 2.0 above.
 
 The industry interval is wide because there are only eleven groups to estimate a spread from. That is what eleven groups can say.
 
@@ -129,17 +129,18 @@ The industry interval is wide because there are only eleven groups to estimate a
 ## Limits
 
 - **Only sentences whose arrival was seen.** The 7.1 million sentences already in companies' first filings are left out, and they are probably the oldest and most durable text there is. Survival here is the survival of additions.
-- **A missed match ends a chain early.** If the matcher fails to link a sentence to its next-year version, the sentence counts as removed and its successor as new. Milestone 2 puts that at about 0.5% of carried-over sentences a year, which compounds over a long chain, so long survival is understated a little.
+- **A missed match ends a chain early.** If the matcher fails to link a sentence to its next-year version, the sentence counts as removed and its successor as new. The measurement puts that at about 0.5% of carried-over sentences a year, which compounds over a long chain, so long survival is understated a little.
 - **A reversed claim continues a chain.** The matcher calls a sentence carried over when its words are kept and its meaning changed (`docs/measurement.md`), so "lasting" means the wording lasted.
 - **Merges.** Two of last year's sentences may continue into the same sentence this year; both chains go on.
 - **The hazard model is fit on a sample** of 2,000 companies, and its sentence characteristics are cut into thirds. The survival tables use every chain.
 - **Shared is fixed at birth.** A sentence that other companies adopt later is still counted as the company's own.
 - **These are associations.** A shared sentence lasts longer; nothing here says that sharing is why.
 
-## What changed from the plan
+## Decisions made during fitting
 
-1. **The variance model samples industry effects directly**, where the first version scaled them from unit draws as the hazard model does. The first full run failed the convergence standard on the logit scale: 4 divergent transitions in 4,000 draws, and still 1 in 8,000 with the step size tuned for 95% and for 99% acceptance, each time where the industry spread was drawn large. Most industries have hundreds or thousands of companies behind them, so their offsets are well measured, and a well-measured offset is better sampled directly. Sampled that way, both scales have no divergences and four to six times the effective draws, and the estimates are the same.
+The analysis plan fixed the decision rules. These are the choices it left open, or that the fits forced.
+
+1. **The variance model samples industry effects directly**, where the hazard model scales them from unit draws. Scaled, the variance fit misses the convergence standard on the logit scale: 4 divergent transitions in 4,000 draws, and still 1 in 8,000 with the step size tuned for 95% and for 99% acceptance, each time where the industry spread was drawn large. Most industries have hundreds or thousands of companies behind them, so their offsets are well measured, and a well-measured offset is better sampled directly. Sampled that way, both scales have no divergences and four to six times the effective draws, and the estimates are the same.
 2. **The hazard model's step size is tuned for 95% acceptance**, not the default 80%. On simulated data the default gave one divergent transition in 4,000 draws in one seed of three, from the same cause; at 95%, none in any seed. Here the scaled form is the right one, because an industry's effect on the hazard is barely pinned down.
 3. **The hazard fits use 1,500 draws a chain**, not 1,000, to clear 400 effective draws for every parameter with room to spare.
-4. **The variance fits run before the hazard fits.** Any fit that misses the standard stops the stage, and the first run lost half an hour of hazard sampling to a failure in the fit that came last.
-5. **The proportional-hazards test uses the Kaplan–Meier time transform**, for the reason given above.
+4. **The proportional-hazards test uses the Kaplan–Meier time transform**, for the reason given above.

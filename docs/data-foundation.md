@@ -1,6 +1,6 @@
 # Data foundation
 
-What milestone 1 builds, the checks behind it, and the decisions those checks forced. Every number here was printed by the command named next to it; none is typed in by hand. Raw and interim data stay out of git, so the commands are the record.
+The data the study runs on: where it comes from, the checks behind it, and the decisions those checks forced. Every number here was printed by the command named next to it; none is typed in by hand. Raw and interim data stay out of git, so the commands are the record.
 
 ```
 uv run python -m pipeline.run filings      # data/interim/filings.parquet
@@ -17,16 +17,16 @@ Each section needs the date its 10-K was filed, because the 2020 analysis compar
 
 ### The corpus year is the year reported on, not the year filed
 
-The corpus labels each section with a year and doesn't say which year it means. The first version of this stage assumed it was the year filed and joined each section to the company's 10-K filed in that calendar year. It dated 92.1% of sections, a rate that looks like a join with a few gaps.
+The corpus labels each section with a year and doesn't say which year it means. The natural reading is the year filed. Joining each section to the company's 10-K filed in that calendar year dates 92.1% of sections, a rate that looks like a join with a few gaps.
 
-It was mostly wrong. Most companies file every year, so joining on the wrong year still finds a 10-K: the previous one. A match rate can't see that, so the check uses the text instead. COVID-19 was named on 2020-02-11. A section filed before that day can't contain the word, and one filed from April 2020 on almost always does.
+It is mostly wrong. Most companies file every year, so joining on the wrong year still finds a 10-K: the previous one. A match rate can't see that, so the check uses the text instead. COVID-19 was named on 2020-02-11. A section filed before that day can't contain the word, and one filed from April 2020 on almost always does.
 
 | Corpus year matched to | Sections dated | Dated before 2020-02-11 yet mentioning COVID | Sections dated January 2020 that mention COVID |
 |---|---|---|---|
-| Year filed (first attempt) | 92.1% | 1,107 of 3,989 | 81.5% |
+| Year filed | 92.1% | 1,107 of 3,989 | 81.5% |
 | Period of report (used) | 100.0% | 8 of 893 | 0.0% |
 
-The corpus year is the calendar year in which the report's fiscal period ended. A report on 2019 is usually filed in early 2020, so the first join attached most sections to the filing from a year earlier. Matched on the period of report, the share of sections mentioning COVID traces the pandemic's arrival month by month, which is also the exposure measure the 2020 analysis will use:
+The corpus year is the calendar year in which the report's fiscal period ended. A report on 2019 is usually filed in early 2020, so a join on the year filed attaches most sections to the filing from a year earlier. Matched on the period of report, the share of sections mentioning COVID traces the pandemic's arrival month by month, which is also the exposure measure the 2020 test uses:
 
 | Month filed | Sections | Mention COVID |
 |---|---|---|
@@ -52,11 +52,11 @@ Filing dates come from SEC's bulk submissions archive (`submissions.zip`), which
 | `amendment_only` | 0 | 0.0% |
 | `none` | 0 | 0.0% |
 
-`multiple` has three causes: a period of report mis-entered as the filing date, a 52- or 53-week fiscal year that ends twice in one calendar year (1 January and 31 December), and transition reports after a change of fiscal year. Nothing in the metadata says which of the candidates the corpus kept, so these rows are flagged and the date-sensitive analysis in milestone 4 will run on `unique` rows, with `multiple` rows added as a robustness check.
+`multiple` has three causes: a period of report mis-entered as the filing date, a 52- or 53-week fiscal year that ends twice in one calendar year (1 January and 31 December), and transition reports after a change of fiscal year. Nothing in the metadata says which of the candidates the corpus kept, so these rows are flagged, and the date-sensitive [2020 test](test-2020.md) runs on `unique` rows, with `multiple` rows added as a robustness check.
 
 Days from the end of the period to the filing date: median 72, 5th to 95th percentile 47 to 107. 690 sections (1.0%) were filed more than a year after their period ended (late filers), and none before it.
 
-### What this changes in the design
+### What this means for the design
 
 - The corpus runs through reports on fiscal 2020. 87.1% of those were filed on or after 2020-11-09, when the SEC's amended risk-factor rules took effect, so the last corpus year sits under the new rules instead of ending just before them.
 - The COVID shock lands on reports for fiscal 2019 (corpus year 2019): 21.8% were filed before the disease had a name and 33.5% on or after 2020-03-11, when the WHO declared a pandemic. That within-year split is what the difference-in-differences needs.
@@ -105,7 +105,7 @@ Three candidates, on the 16 test cases in `tests/test_sentences.py` and on 50 se
 | pysbd 0.3.4 | 12/16 | 416.7 | 0.00% | 7.8% | 0.42 | 18 min |
 | `pipeline.sentences` (used) | 16/16 | 388.4 | 0.01% | 2.8% | 30.17 | 15 s |
 
-The case count alone would be a rigged contest: all three pass the 8 cases the plan started with, and the other 8 were added from failures seen in the real text while this splitter was being written, so it passes them by construction. The fair test is where the two serious candidates disagree on text neither was tuned on.
+The case count alone would be a rigged contest: all three pass the 8 cases the test file started with, and the other 8 were added from failures seen in the real text while this splitter was being written, so it passes them by construction. The fair test is where the two serious candidates disagree on text neither was tuned on.
 
 Run on the same stitched paragraphs, pysbd and `pipeline.sentences` split 98.1% of 7,737 paragraphs identically. They differ at 298 boundaries: 282 that only pysbd makes and 16 that only this splitter makes. A random 80 of those (seed 0) were read and judged one by one; the judgments are in [`docs/reviews/splitter_disagreements.csv`](reviews/splitter_disagreements.csv):
 
@@ -117,7 +117,7 @@ Run on the same stitched paragraphs, pysbd and `pipeline.sentences` split 98.1% 
 
 Nearly all of pysbd's extra boundaries fall inside a sentence: before an enumerated clause ("...the earlier of ‖ (i) the completion..."), after a cross-reference ("see Item 7. ‖ Management's Discussion..."), or after an abbreviation ("A.M. ‖ Best ratings"). This project keeps a sentence with its enumerated clauses whole on purpose, because a sentence is the unit a company keeps, edits or drops. The four pysbd wins are real misses here: two sentences ending in "Ltd." before "Mr. Williams" (a word this splitter doesn't treat as a sentence opener), and two places where the source text itself is garbled around the period.
 
-Who judged: Claude, during the build session, reading each context. Joe didn't hand-label them. The file is committed so anyone can disagree with a specific row.
+Who judged: Claude, the language model the pipeline was built with, reading each boundary in context. No person labeled them. The file is committed so anyone can disagree with a specific row.
 
 ### Debris and normalization
 
@@ -151,13 +151,13 @@ Columns: `cik`, `filing_year`, `sent_idx` (position among kept sentences), `para
 The first 20 sentences of 50 filings (sampled with `random_state=0`) were read, 1,000 sentences in all. The per-filing notes are in [`docs/reviews/sentence_review.csv`](reviews/sentence_review.csv).
 
 - **Boundary errors: 2**, each leaving two fragments where there should be one sentence (4 of 1,000 sentences, 0.4%). One is a line wrapped before a capitalized word ("...under the Senior" / "Secured Notes due 2018..."), which the stitching rules leave alone because a capital after a line break usually does start something new. The other is "Yahoo! Inc."
-- **Fixed during the review: 1.** A sentence ending "...in Item 8." was being glued to the next one. A reference to an item now runs on only when the item's title follows it ("Item 7. Management's Discussion..."). The table above is from the rebuild after that fix, and the filing was reread.
+- **Fixed as a result: 1.** A sentence ending "...in Item 8." was being glued to the next one. A reference to an item now runs on only when the item's title follows it ("Item 7. Management's Discussion..."). The table above is from the rebuild after that fix, and the filing was reread.
 - **Limit of this check.** Each sentence was read as its first 58 and last 32 characters, which is where splitting errors show. A missed boundary in the middle of a long sentence would not be seen this way; the 0.48% of sentences over 600 characters is the upper bound on where those could hide.
 
-Who read them: Claude, during the build session. Joe didn't hand-check them.
+Who read them: Claude, as above. No person checked them.
 
 ### Headings
 
-`is_heading` is kept, with a narrower meaning than the plan hoped for. It marks a line that has no end punctuation and isn't a list item: section headings ("Risks Related to Our Business") and captions written without a full stop. In the 50 filings every flagged line was a heading (no wrong flags), so the column is safe to use for setting those lines aside.
+`is_heading` has a narrow meaning. It marks a line that has no end punctuation and isn't a list item: section headings ("Risks Related to Our Business") and captions written without a full stop. In the 50 filings every flagged line was a heading (no wrong flags), so the column is safe to use for setting those lines aside.
 
-It does not find risk-factor captions that end in a period, which is how most filers write them ("We depend on a small number of customers." on a line of its own, followed by the paragraph that explains it). Those are ordinary sentences here. In the 2015 file, 55.8% of paragraphs hold a single sentence, so "a one-sentence paragraph" is a usable signal for captions if a later milestone needs one, and `para_idx` is there to compute it.
+It does not find risk-factor captions that end in a period, which is how most filers write them ("We depend on a small number of customers." on a line of its own, followed by the paragraph that explains it). Those are ordinary sentences here. In the 2015 file, 55.8% of paragraphs hold a single sentence, so "a one-sentence paragraph" is a usable signal for captions if later work needs one, and `para_idx` is there to compute it.

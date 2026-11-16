@@ -1,6 +1,6 @@
 """Follow each sentence a company adds until the company removes it.
 
-Milestone 2 links every sentence to its match in the next filing. Chained
+The labels stage links every sentence to its match in the next filing. Chained
 together, those links give each added sentence a life: the number of
 consecutive filings it appears in, and whether it ended (the next filing has
 no match for it) or was still there when the data stopped (the company's last

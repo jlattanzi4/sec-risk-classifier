@@ -1,1 +1,1 @@
-"""Pipeline for the copying rework: EDGAR metadata, sentences, and later stages."""
+"""The pipeline, a stage at a time: EDGAR metadata, sentences, matching, models, the report."""

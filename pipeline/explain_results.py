@@ -1,4 +1,4 @@
-"""Gather milestone 3's results into `results/explain.json`.
+"""Gather the survival, hazard and variance results into `results/explain.json`.
 
 Everything `docs/explain.md` quotes: how many sentences were followed and how
 many could not be, the survival curves, the proportional-hazards check, the
