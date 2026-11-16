@@ -56,3 +56,6 @@ outputs/*.html
 # Pipeline downloads and intermediate files (rebuilt by `python -m pipeline.run`)
 data/interim/
 data/raw/edgar/
+
+# Scratch space for plan execution (ledgers, logs)
+.superpowers/

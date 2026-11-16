@@ -1,0 +1,11 @@
+{
+ "result": "[\n {\"id\": \"rp1242\", \"label\": \"different\"},\n {\"id\": \"rp0585\", \"label\": \"different\"},\n {\"id\": \"rp1413\", \"label\": \"different\"},\n {\"id\": \"rp1430\", \"label\": \"same\"},\n {\"id\": \"rp1389\", \"label\": \"different\"},\n {\"id\": \"rp1229\", \"label\": \"same\"},\n {\"id\": \"rp0497\", \"label\": \"different\"},\n {\"id\": \"rp0702\", \"label\": \"same\"},\n {\"id\": \"rp0375\", \"label\": \"paraphrase\"},\n {\"id\": \"rp0975\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1209\", \"label\": \"different\"},\n {\"id\": \"rp1562\", \"label\": \"same\"},\n {\"id\": \"rp0404\", \"label\": \"different\"},\n {\"id\": \"rp0419\", \"label\": \"same\"},\n {\"id\": \"rp1464\", \"label\": \"different\"},\n {\"id\": \"rp1737\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1156\", \"label\": \"different\"},\n {\"id\": \"rp0173\", \"label\": \"different\"},\n {\"id\": \"rp0690\", \"label\": \"same\"},\n {\"id\": \"rp0827\", \"label\": \"different\"},\n {\"id\": \"rp0428\", \"label\": \"same\"},\n {\"id\": \"rp1491\", \"label\": \"different\"},\n {\"id\": \"rp1139\", \"label\": \"same\"},\n {\"id\": \"rp1739\", \"label\": \"different\"},\n {\"id\": \"rp0718\", \"label\": \"same\"},\n {\"id\": \"rp0282\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1508\", \"label\": \"different\"},\n {\"id\": \"rp1120\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1527\", \"label\": \"same\"},\n {\"id\": \"rp0635\", \"label\": \"different\"},\n {\"id\": \"rp0738\", \"label\": \"different\"},\n {\"id\": \"rp0499\", \"label\": \"different\"},\n {\"id\": \"rp1098\", \"label\": \"different\"},\n {\"id\": \"rp1113\", \"label\": \"same\"},\n {\"id\": \"rp0691\", \"label\": \"different\"},\n {\"id\": \"rp1494\", \"label\": \"same\"},\n {\"id\": \"rp0000\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1416\", \"label\": \"same\"},\n {\"id\": \"rp1173\", \"label\": \"same\"},\n {\"id\": \"rp0926\", \"label\": \"different\"}\n]",
+ "stop_reason": "end_turn",
+ "duration_ms": 2547,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 7598,
+   "output_tokens": 815
+  }
+ }
+}

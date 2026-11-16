@@ -1,0 +1,11 @@
+{
+ "result": "[{\"id\":\"rp1980\",\"label\":\"same\"},{\"id\":\"rp1082\",\"label\":\"same\"},{\"id\":\"rp1065\",\"label\":\"different\"},{\"id\":\"rp0782\",\"label\":\"same\"},{\"id\":\"rp1435\",\"label\":\"different\"},{\"id\":\"rp0562\",\"label\":\"same\"},{\"id\":\"rp0209\",\"label\":\"same\"},{\"id\":\"rp1172\",\"label\":\"different\"},{\"id\":\"rp0739\",\"label\":\"different\"},{\"id\":\"rp0594\",\"label\":\"different\"},{\"id\":\"rp0123\",\"label\":\"different\"},{\"id\":\"rp0734\",\"label\":\"different\"},{\"id\":\"rp0931\",\"label\":\"same\"},{\"id\":\"rp1598\",\"label\":\"different\"},{\"id\":\"rp0098\",\"label\":\"different\"},{\"id\":\"rp0377\",\"label\":\"different\"},{\"id\":\"rp0130\",\"label\":\"same\"},{\"id\":\"rp1723\",\"label\":\"different\"},{\"id\":\"rp0023\",\"label\":\"different\"},{\"id\":\"rp1407\",\"label\":\"different\"},{\"id\":\"rp1890\",\"label\":\"same\"},{\"id\":\"rp0555\",\"label\":\"different\"},{\"id\":\"rp0370\",\"label\":\"different\"},{\"id\":\"rp1536\",\"label\":\"same\"},{\"id\":\"rp0383\",\"label\":\"different\"},{\"id\":\"rp0201\",\"label\":\"different\"},{\"id\":\"rp0917\",\"label\":\"same\"},{\"id\":\"rp0368\",\"label\":\"same\"},{\"id\":\"rp0973\",\"label\":\"different\"},{\"id\":\"rp1578\",\"label\":\"different\"},{\"id\":\"rp1634\",\"label\":\"same\"},{\"id\":\"rp0387\",\"label\":\"different\"},{\"id\":\"rp0816\",\"label\":\"different\"},{\"id\":\"rp1316\",\"label\":\"same\"},{\"id\":\"rp1714\",\"label\":\"same\"},{\"id\":\"rp0256\",\"label\":\"different\"},{\"id\":\"rp1630\",\"label\":\"same\"},{\"id\":\"rp1221\",\"label\":\"same\"},{\"id\":\"rp1119\",\"label\":\"paraphrase\"},{\"id\":\"rp1472\",\"label\":\"different\"}]",
+ "stop_reason": "end_turn",
+ "duration_ms": 2394,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 7816,
+   "output_tokens": 674
+  }
+ }
+}

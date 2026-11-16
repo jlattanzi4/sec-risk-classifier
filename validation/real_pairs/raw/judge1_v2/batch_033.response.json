@@ -1,0 +1,11 @@
+{
+ "result": "```json\n[\n {\"id\": \"rp1763\", \"label\": \"same\"},\n {\"id\": \"rp0396\", \"label\": \"different\"},\n {\"id\": \"rp1915\", \"label\": \"same\"},\n {\"id\": \"rp1650\", \"label\": \"same\"},\n {\"id\": \"rp1177\", \"label\": \"same\"},\n {\"id\": \"rp1863\", \"label\": \"different\"},\n {\"id\": \"rp1253\", \"label\": \"different\"},\n {\"id\": \"rp1706\", \"label\": \"different\"},\n {\"id\": \"rp0021\", \"label\": \"same\"},\n {\"id\": \"rp1305\", \"label\": \"same\"},\n {\"id\": \"rp0766\", \"label\": \"same\"},\n {\"id\": \"rp0392\", \"label\": \"same\"},\n {\"id\": \"rp0250\", \"label\": \"same\"},\n {\"id\": \"rp1267\", \"label\": \"different\"},\n {\"id\": \"rp1495\", \"label\": \"same\"},\n {\"id\": \"rp1059\", \"label\": \"different\"},\n {\"id\": \"rp0671\", \"label\": \"same\"},\n {\"id\": \"rp1971\", \"label\": \"different\"},\n {\"id\": \"rp1509\", \"label\": \"different\"},\n {\"id\": \"rp1372\", \"label\": \"same\"},\n {\"id\": \"rp1133\", \"label\": \"different\"},\n {\"id\": \"rp0869\", \"label\": \"paraphrase\"},\n {\"id\": \"rp0604\", \"label\": \"same\"},\n {\"id\": \"rp1379\", \"label\": \"different\"},\n {\"id\": \"rp1655\", \"label\": \"same\"},\n {\"id\": \"rp0627\", \"label\": \"different\"},\n {\"id\": \"rp0902\", \"label\": \"same\"},\n {\"id\": \"rp0856\", \"label\": \"same\"},\n {\"id\": \"rp1195\", \"label\": \"different\"},\n {\"id\": \"rp1262\", \"label\": \"same\"},\n {\"id\": \"rp0700\", \"label\": \"same\"},\n {\"id\": \"rp1780\", \"label\": \"same\"},\n {\"id\": \"rp1567\", \"label\": \"different\"},\n {\"id\": \"rp0709\", \"label\": \"same\"},\n {\"id\": \"rp1961\", \"label\": \"different\"},\n {\"id\": \"rp0321\", \"label\": \"same\"},\n {\"id\": \"rp1607\", \"label\": \"different\"},\n {\"id\": \"rp1791\", \"label\": \"different\"},\n {\"id\": \"rp1179\", \"label\": \"same\"},\n {\"id\": \"rp1711\", \"label\": \"different\"}\n]\n```",
+ "stop_reason": "end_turn",
+ "duration_ms": 72219,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 7321,
+   "output_tokens": 3617
+  }
+ }
+}

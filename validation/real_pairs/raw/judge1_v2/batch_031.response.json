@@ -1,0 +1,11 @@
+{
+ "result": "```json\n[\n {\"id\": \"rp1959\", \"label\": \"same\"},\n {\"id\": \"rp0922\", \"label\": \"same\"},\n {\"id\": \"rp1777\", \"label\": \"same\"},\n {\"id\": \"rp0167\", \"label\": \"same\"},\n {\"id\": \"rp0421\", \"label\": \"different\"},\n {\"id\": \"rp0225\", \"label\": \"different\"},\n {\"id\": \"rp0012\", \"label\": \"same\"},\n {\"id\": \"rp1729\", \"label\": \"same\"},\n {\"id\": \"rp1092\", \"label\": \"same\"},\n {\"id\": \"rp0090\", \"label\": \"different\"},\n {\"id\": \"rp1530\", \"label\": \"same\"},\n {\"id\": \"rp1657\", \"label\": \"different\"},\n {\"id\": \"rp0857\", \"label\": \"different\"},\n {\"id\": \"rp1710\", \"label\": \"same\"},\n {\"id\": \"rp1709\", \"label\": \"same\"},\n {\"id\": \"rp0304\", \"label\": \"different\"},\n {\"id\": \"rp1895\", \"label\": \"same\"},\n {\"id\": \"rp1674\", \"label\": \"different\"},\n {\"id\": \"rp1937\", \"label\": \"different\"},\n {\"id\": \"rp1924\", \"label\": \"same\"},\n {\"id\": \"rp1232\", \"label\": \"different\"},\n {\"id\": \"rp0490\", \"label\": \"different\"},\n {\"id\": \"rp0074\", \"label\": \"paraphrase\"},\n {\"id\": \"rp0515\", \"label\": \"paraphrase\"},\n {\"id\": \"rp1095\", \"label\": \"different\"},\n {\"id\": \"rp0561\", \"label\": \"different\"},\n {\"id\": \"rp0179\", \"label\": \"same\"},\n {\"id\": \"rp0109\", \"label\": \"same\"},\n {\"id\": \"rp0116\", \"label\": \"different\"},\n {\"id\": \"rp0293\", \"label\": \"different\"},\n {\"id\": \"rp1100\", \"label\": \"same\"},\n {\"id\": \"rp1072\", \"label\": \"different\"},\n {\"id\": \"rp0643\", \"label\": \"same\"},\n {\"id\": \"rp0772\", \"label\": \"different\"},\n {\"id\": \"rp1667\", \"label\": \"different\"},\n {\"id\": \"rp1401\", \"label\": \"same\"},\n {\"id\": \"rp0622\", \"label\": \"same\"},\n {\"id\": \"rp1636\", \"label\": \"same\"},\n {\"id\": \"rp1639\", \"label\": \"different\"},\n {\"id\": \"rp0409\", \"label\": \"different\"}\n]\n```",
+ "stop_reason": "end_turn",
+ "duration_ms": 80969,
+ "models": {
+  "claude-haiku-5-5": {
+   "input_tokens": 7922,
+   "output_tokens": 4454
+  }
+ }
+}

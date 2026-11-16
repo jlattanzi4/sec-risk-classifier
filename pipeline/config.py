@@ -20,6 +20,16 @@ class Config:
     interim_dir: Path
     sec_user_agent: str
 
+    @property
+    def validation_dir(self) -> Path:
+        """Committed validation data: test sets, prompts, model replies, judge labels."""
+        return self.root / "validation"
+
+    @property
+    def results_dir(self) -> Path:
+        """Committed results: the numbers the write-ups and the report quote."""
+        return self.root / "results"
+
 
 def load_config(env_file: Path | None = None, root: Path | None = None) -> Config:
     """Build the config, stopping before any network call if the SEC contact is missing.
