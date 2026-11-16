@@ -24,6 +24,7 @@ from pipeline.known_answer import build_known_answer, summarize_known_answer
 from pipeline.labels import build_filing_metrics, build_labels
 from pipeline.peers import build_peers
 from pipeline.report_data import build_baselines, build_measure_results
+from pipeline.report_json import build_report_json
 from pipeline.stages import CORPUS, build_filings, build_sentences, sentence_stats
 from pipeline.thresholds import build_thresholds, read_thresholds
 
@@ -324,6 +325,17 @@ def _test2020(cfg, args) -> None:
             )
 
 
+def _report_data(cfg, args) -> None:
+    path = build_report_json(cfg)
+    example = json.loads(path.read_text())["example"]
+    print(f"wrote {path.relative_to(cfg.root)} ({path.stat().st_size / 1e3:,.0f} KB)")
+    print(
+        f"example filing: {example['name']} (CIK {example['cik']}), fiscal {example['year']}, "
+        f"filed {example['date_filed']}: {len(example['sentences']):,} sentences, "
+        f"{len(example['removed']):,} of last year's removed"
+    )
+
+
 # In pipeline order: each stage reads what the ones before it wrote.
 STAGES = {
     "filings": _filings,
@@ -342,6 +354,7 @@ STAGES = {
     "chains": _chains,
     "explain": _explain,
     "test2020": _test2020,
+    "report-data": _report_data,
 }
 
 

@@ -1,4 +1,4 @@
-"""Gather milestone 4's results into `results/test2020.json`."""
+"""Gather the 2020 test's results into `results/test2020.json`."""
 
 import json
 from pathlib import Path

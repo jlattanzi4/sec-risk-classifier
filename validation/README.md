@@ -38,7 +38,7 @@ Files:
 - `raw/generate/`, `raw/confirm/`: for each batch, the full prompt sent (`.request.json`) and the reply (`.response.json`: the text, the models used, token counts and duration). 24 batches of 25 sentences to Haiku, 24 batches of 50 pairs to Sonnet.
 - `confirm_key.csv`: which pair each anonymous id in the confirmation step stood for.
 
-**Read before use (2026-11-11, by Claude in the build session; Joe did not hand-check):** 12 random pairs of each generated kind, and all 3 rejections.
+**Read before use (2026-11-11, by Claude, the language model the pipeline was built with; no person checked them):** 12 random pairs of each generated kind, and all 3 rejections.
 
 - Every pair read was what its kind says it is.
 - All 3 rejections were right: one paraphrase moved a future event into the past, one added "rather than acquisitions", one changed who does what.
@@ -56,7 +56,7 @@ The known-answer set shows the matcher works on cases built to have an answer. T
 Two judges, same rubric, three labels (same, paraphrase, different):
 
 - **Judge 1: Claude Haiku 5.5**, all 2,000 pairs, 40 to a call.
-- **Judge 2: Claude, in the build session (2026-11-11)**, a 400-pair subset spread evenly over the bands. It was shown only an id and the two sentences, in its own shuffled order: no scores, no bands, no judge-1 labels. Its labels were written before judge 1's were opened.
+- **Judge 2: a second Claude model, the one the pipeline was built with (2026-11-11)**, a 400-pair subset spread evenly over the bands. It was shown only an id and the two sentences, in its own shuffled order: no scores, no bands, no judge-1 labels. Its labels were written before judge 1's were opened.
 
 ### Round 1 (rubric v1): the judges did not agree
 

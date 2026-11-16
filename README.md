@@ -1,207 +1,59 @@
-# SEC 10-K Risk Factor Intelligence
+# How much of a 10-K risk section is boilerplate?
 
-An end-to-end NLP pipeline analyzing 79,000+ corporate risk disclosures from SEC 10-K filings. This project demonstrates multi-class text classification, transformer fine-tuning, topic modeling, semantic similarity analysis, and model explainability.
+Every public company lists the risks it faces in its annual report. This project compares 47,643 of those sections with the same company's section from the year before, sentence by sentence (14.3 million sentences, 10,779 companies, fiscal 2007 to 2020), to measure how much is carried over, to check how far that measurement can be trusted, and to test what makes companies rewrite.
 
-> **Under review (November 2026).** A review found that this project's headline numbers don't hold as first stated. The "51% semantic vs 21% lexical" gap compares scores computed on different amounts of text: the embedding model reads only about the first 1,400 characters of each section, while TF-IDF reads up to 50,000. The 71.2% F1 comes from an evaluation where upsampled copies of test rows were also in the training set. And the "paragraphs" are mostly whole risk sections, because segmentation didn't split them. A sentence-level rework is tracked in [#1](https://github.com/jlattanzi4/sec-risk-classifier/issues/1). The pipeline and figures below are the original version, kept for reference.
+**[Read the report](https://jlattanzi4.github.io/sec-risk-classifier/report.html)**
 
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=flat&logo=scikit-learn&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=flat&logo=pytorch&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+[![Kellogg Co's risk section for fiscal 2019, drawn as a redline against the year before: gray lines are sentences kept word for word, blue lines are edited or new, red lines were cut](docs/redline.png)](https://jlattanzi4.github.io/sec-risk-classifier/report.html)
 
----
+*One real risk section (Kellogg Co, fiscal 2019) marked up against the year before, a line a sentence. Gray is kept word for word, blue is edited, reworded or new, red was cut. The filing was chosen by rule: the one closest to the median filing.*
 
-## Interactive Report
+## What it found
 
-**[Read the report](https://jlattanzi4.github.io/sec-risk-classifier/report.html)**: what the data shows, what the first version got wrong, and what the rework will measure.
+- **73.4% of sentences are last year's, word for word**, and another 11.6% are light edits. In the median section, 8.4% of the sentences are new.
+- **Boilerplate travels between companies.** 7.3% of full sentences are filed word for word, in the same year, by at least 5 other companies. That share rose from 2.2% to 13.7% over the period.
+- **A new sentence has a 23% chance of being gone the next year**, and the risk falls every year it survives. Sentences shared with other companies last a median of 10 filings, against 5 for a company's own.
+- **Rewriting is an event, not a trait.** 84% of the variation in how much of a filing is new is the same company differing from itself from one year to the next.
+- **The pandemic made companies add, not rewrite.** Companies that filed their fiscal 2019 report after the pandemic was declared added sentences about COVID worth 1.3% of the section. The change in their new text overall can't be told from zero (+0.8 points, 95% interval −0.6 to +2.3). The larger change came a year later, with the SEC's new risk-factor rules: reports filed before them cut 6.0% of the previous year's sentences, and reports filed after cut 11.6%.
 
----
+## How far to trust it
 
-## At a Glance
+No person labeled anything. The measurement was checked three ways instead, and the report shows where it holds and where it breaks.
 
-| | |
-|--------|-------|
-| Risk disclosures analyzed | 79,415 |
-| Unique companies | 13,970 |
-| Filing years | 2006–2020 |
-| Topics discovered | 21 |
+- **Two language-model judges** labeled 2,000 pairs of real sentences. They agreed only moderately (a kappa of 0.60, under the 0.70 set as the bar in advance), so the check uses the 307 pairs both agree on. On those, an "edited" match is right 94.8% of the time and a "new" call 99.6%; the stricter judge alone puts "edited" at 81.1%. "Reworded" is the weakest label: 80.1%, on 34 pairs.
+- **A threshold tuned on synthetic pairs doesn't transfer.** Tuned on constructed paraphrases, the cut-off for "reworded" is wrong on 69% of the real pairs it accepts: a real sentence is compared with every candidate in last year's filing, and the closest of dozens clears a low bar. The cut-off used is tuned on judged real pairs.
+- **It follows words, not meaning.** Of 300 test sentences whose claim was reversed by changing a word or two, 292 count as carried over. Edits that change what a sentence says are rare in real filings (about 5% of edited matches), and this is the method's stated limit.
+- **Against nothing.** Matched against an unrelated company's filing in place of its own, 0.6% of a section's sentences come out kept or edited. Against its own, 82.7%.
 
----
+## How it is built
 
-## NLP Techniques Demonstrated
+One pipeline, one stage per step, each caching its output so a rerun resumes where it stopped. Every number in the report comes from one committed file, `docs/data/report.json`, and each stage has a write-up with the command behind every figure.
 
-| Technique | Implementation | Purpose |
-|-----------|---------------|---------|
-| **Text Classification** | TF-IDF + Ensemble (LR, SVM, RF, XGBoost, LightGBM) | Categorize risks into 10 domains |
-| **Transformer Fine-tuning** | DistilBERT | Compare deep learning vs traditional ML |
-| **Topic Modeling** | BERTopic (UMAP + HDBSCAN) | Unsupervised discovery of risk themes |
-| **Sentence Embeddings** | SBERT (all-MiniLM-L6-v2) | Semantic similarity analysis |
-| **Model Explainability** | SHAP | Identify which words drive predictions |
+| Step | What it does | Write-up |
+|---|---|---|
+| Data | Filing dates and industries from SEC EDGAR, and a sentence table for every section | [`docs/data-foundation.md`](docs/data-foundation.md) |
+| Measure | Exact, near and reworded matching between consecutive filings; a known-answer test set; two-judge validation; baselines | [`docs/measurement.md`](docs/measurement.md) |
+| Explain | Survival of added sentences, a hazard model with a company random effect, and a variance decomposition, fit by NUTS | [`docs/explain.md`](docs/explain.md) |
+| Test | A difference-in-differences around the start of the pandemic, with placebo years and an event study | [`docs/test-2020.md`](docs/test-2020.md) |
+| Publish | The report's data file and the page | `pipeline/report_json.py`, `src/generate_report.py` |
 
----
+## Reproduce
 
-## Project Structure
-
-```
-sec-risk-classifier/
-├── data/
-│   └── processed/           # Processed parquet files
-├── src/
-│   ├── preprocessing.py     # Data cleaning and segmentation
-│   ├── train_optimized.py   # TF-IDF ensemble classifier
-│   ├── train_distilbert.py  # Transformer comparison
-│   ├── topic_modeling.py    # BERTopic analysis
-│   ├── model_explainability.py  # SHAP analysis
-│   ├── boilerplate_detection.py # Semantic similarity
-│   ├── generate_report.py   # Builds docs/report.html from the data
-│   └── report_template.html # The report's page design
-├── models/                  # Trained model artifacts
-├── outputs/                 # Visualizations
-├── docs/report.html         # Interactive analysis report (served by GitHub Pages)
-└── README.md
-```
-
----
-
-## Methodology
-
-### 1. Data Acquisition and Preprocessing
-- Source: [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) from Hugging Face
-- Filtered to 10-K filings with Item 1A risk factor sections (2006-2020)
-- 79,415 risk disclosures (segmentation was meant to split paragraphs but mostly kept whole sections; see the note above)
-- Memory-optimized processing with PyArrow for 1.6GB dataset
-
-### 2. Multi-Class Classification
-- Soft Voting Ensemble scored 71.2% F1 (macro) on a leaky evaluation (see the note above)
-- Compared 5 algorithms: Logistic Regression, SVM, Random Forest, XGBoost, LightGBM
-- Class balancing via strategic up/downsampling
-- TF-IDF vectorization with 10,000 features and bigrams
-
-### 3. Transformer Comparison
-- Fine-tuned DistilBERT achieved **57.8% F1**
-- TF-IDF scored higher, but its number comes from the leaky evaluation above, so the comparison doesn't hold
-- SEC filings average 48K characters, exceeding transformer token limits (512)
-
-### 4. Topic Modeling
-- BERTopic discovered **21 distinct risk themes**
-- Industry-specific patterns emerged (Oil & Gas, Real Estate, Biotech)
-- Only 14% of topics align with manual categories, revealing hidden sub-themes
-
-### 5. Semantic Similarity Analysis
-- Compared TF-IDF (lexical) vs SBERT (semantic) similarity
-- Mean lexical similarity: 21.3%
-- Mean semantic similarity: 51.0%
-- The two means aren't comparable: SBERT reads about the first 1,400 characters of each section (a 256-token limit), TF-IDF up to 50,000 with rare words weighted up. Shuffling the words, which destroys their meaning, raises the SBERT mean to 57.9%.
-
-### 6. Model Explainability
-- SHAP analysis reveals which words drive each classification
-- Critical for regulated industries requiring interpretable decisions
-- Visualized feature importance across all 10 risk categories
-
----
-
-## Risk Categories
-
-| Category | Example Risks |
-|----------|--------------|
-| Regulatory/Legal | Compliance, litigation, government action |
-| Cybersecurity | Data breaches, privacy, information security |
-| Competitive/Market | Competition, market share, pricing pressure |
-| Macroeconomic | Recession, inflation, currency fluctuations |
-| Operational/Supply | Supply chain disruption, manufacturing issues |
-| Financial/Liquidity | Cash flow constraints, debt obligations |
-| Environmental/Climate | ESG requirements, emissions, natural disasters |
-| Personnel/Labor | Key employee retention, workforce issues |
-| Reputational | Brand damage, public perception |
-| Technology/Innovation | R&D risks, technological obsolescence |
-
----
-
-## Installation
+Python 3.12 with [uv](https://docs.astral.sh/uv/).
 
 ```bash
-# Clone the repository
-git clone https://github.com/jlattanzi4/sec-risk-classifier.git
-cd sec-risk-classifier
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+uv sync
+uv run pytest -q
+uv run python -m pipeline.run all        # every stage, in order
+uv run python src/generate_report.py     # docs/report.html and this README's numbers
 ```
 
-### Dependencies
-
-```
-pandas>=2.0
-numpy<2
-scikit-learn>=1.3
-torch>=2.0
-transformers>=4.30
-sentence-transformers>=2.2
-bertopic>=0.15
-shap>=0.42
-plotly>=5.18
-pyarrow>=14.0
-matplotlib
-seaborn
-xgboost
-lightgbm
-```
-
----
-
-## Usage
-
-```bash
-# Run the main classifier
-python src/train_optimized.py
-
-# Run topic modeling
-python src/topic_modeling.py
-
-# Run explainability analysis
-python src/model_explainability.py
-
-# Run boilerplate detection
-python src/boilerplate_detection.py
-
-# Generate interactive report
-python src/generate_report.py
-```
-
----
-
-## Data
-
-This project uses the [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus) dataset containing pre-parsed SEC filings from 1993-2020.
-
-**Note:** Data files are not included due to size (1.6GB). The preprocessing pipeline can regenerate them from the source dataset.
-
----
-
-## The Report
-
-`python src/generate_report.py` computes every number on the page from `data/processed/risk_factors_2006_2020.parquet` (and the saved model results) and fills `src/report_template.html`. It shows:
-- How much of each risk section the similarity models actually read, drawn as pages
-- How long Item 1A sections are by year (median and middle half), and how many filings each year has
-- Where each method from the first version stands after the review
-
----
+The data are not in the repository. The sections come from [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus); filing dates and industries are downloaded from SEC EDGAR, which asks for a contact in each request, so set `SEC_USER_AGENT` in a `.env` file first. A full run takes a few hours on an M3 laptop, about two hours of it embedding sentences. The language-model stages reuse the replies saved under `validation/` and call nothing unless one is missing.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
----
+MIT. See [LICENSE](LICENSE).
 
 ## Author
 
-**Joseph Lattanzi**
-Data Scientist
-
-- Portfolio: [jlattanzi4.github.io](https://jlattanzi4.github.io/)
-- GitHub: [@jlattanzi4](https://github.com/jlattanzi4)
-- LinkedIn: [Joseph Lattanzi](https://www.linkedin.com/in/jlattanzi4/)
+**Joseph Lattanzi**, data scientist: [portfolio](https://jlattanzi4.github.io/), [GitHub](https://github.com/jlattanzi4), [LinkedIn](https://www.linkedin.com/in/joseph-lattanzi/).

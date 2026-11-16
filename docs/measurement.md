@@ -1,6 +1,6 @@
 # Measurement
 
-What milestone 2 builds: a label for every sentence of every risk section that has a previous-year section to compare with, and the evidence for how far those labels can be trusted. Every number here was printed by the command named next to it and is stored in `results/`; none is typed in by hand.
+A label for every sentence of every risk section that has a previous-year section to compare with, and the evidence for how far those labels can be trusted. Every number here was printed by the command named next to it and is stored in `results/`; none is typed in by hand.
 
 ```
 uv run python -m pipeline.run candidates known-answer embeddings similarity \
@@ -45,7 +45,7 @@ Weighting by characters instead of sentences moves little: 70.3% exact, 14.5% ne
 | 2019 | 3,045 | 77.0% | 10.5% | 1.4% | 11.1% | 8.4% | 7.5% |
 | 2020 | 2,977 | 73.0% | 10.3% | 1.7% | 15.0% | 11.9% | 11.9% |
 
-Two things stand out before any modeling. Sections were rewritten less every year from 2008 to 2016: the share carried over word for word rose from 64% to 77%. And two years break the trend: fiscal 2008, written during the financial crisis, and fiscal 2020, written during the pandemic and mostly under the SEC's new risk-factor rules. Milestone 4 takes up 2020.
+Two things stand out before any modeling. Sections were rewritten less every year from 2008 to 2016: the share carried over word for word rose from 64% to 77%. And two years break the trend: fiscal 2008, written during the financial crisis, and fiscal 2020, written during the pandemic and mostly under the SEC's new risk-factor rules. [The 2020 test](test-2020.md) takes up the second.
 
 ## How a sentence gets its label
 
@@ -60,14 +60,14 @@ A sentence may be matched by several on the other side. It is carried over if it
 
 Steps 2 and 3 store scores, not labels: every leftover sentence's best Jaccard and best cosine are kept in `data/interim/similarity/`, and labels are a function of those and the two thresholds. Changing a threshold costs nine seconds, not two hours.
 
-Two departures from the design, both made in the plan before any result:
+Two choices that shape what a label means, both made before any result:
 
 - **Jaccard is computed exactly, not estimated by MinHash**, inside a company's pair. Step 1 leaves 80 sentences per filing on average, so every candidate can be compared outright. MinHash is used where it is needed, across a whole year's sentences (see "Shared with peers").
 - **Leftovers are compared with leftovers.** A new sentence that restates one which was also kept word for word (a summary of an existing risk, say) finds nothing to match. "Baselines" below measures how often.
 
 ## Can the labels be trusted?
 
-Three checks, in the order they were run. The second one failed, and what was done about it is part of the record.
+Three checks. The second one changed the method: a threshold that looks right on constructed pairs does not hold on real ones.
 
 ### 1. Pairs whose right answer is known
 
@@ -81,9 +81,9 @@ Three checks, in the order they were run. The second one failed, and what was do
 | **bge-small-en-v1.5** (used) | 0.447 | 1.000 | 0.447 | 885 | 0.00% |
 | potion-base-8M (static word vectors) | 0.318 | 0.997 | 0.318 | 43,975 | 0.00% |
 
-Every model separates a paraphrase from an unrelated sentence perfectly. **None can tell a paraphrase from a sentence whose claim was reversed**: with as many hard edits as paraphrases, a coin flip scores 0.5, and all three score below it. For bge-small the median cosine is 0.92 for a paraphrase and 0.92 for a hard edit. Embeddings follow the words. That is the same failure the first version of this project made at the scale of whole sections, measured this time.
+Every model separates a paraphrase from an unrelated sentence perfectly. **None can tell a paraphrase from a sentence whose claim was reversed**: with as many hard edits as paraphrases, a coin flip scores 0.5, and all three score below it. For bge-small the median cosine is 0.92 for a paraphrase and 0.92 for a hard edit. Embeddings follow the words.
 
-**Thresholds from the tuning half**, by best F1: τ_v = 0.198 (F1 0.968) and τ_p = 0.774 (F1 0.972). On the held-out half, at the thresholds finally used:
+**Thresholds from the tuning half**, by best F1: τ_v = 0.198 (F1 0.968) and τ_p = 0.774 (F1 0.972). On the held-out half, at the thresholds used (τ_p is the one from real pairs, below):
 
 | Kind of pair (held-out half) | Labeled near | Reworded | New |
 |---|---|---|---|
@@ -98,13 +98,13 @@ The hard edits are the limit of the method, and it is not a small one: **292 of 
 
 ### 2. Real pairs, two judges
 
-`validation/real_pairs/` (the full account is in [`validation/README.md`](../validation/README.md)): 2,000 real pairs, a leftover sentence and the previous-year sentence closest to it, drawn evenly across bands of cosine by Jaccard and weighted back to the 3.8 million sentences they stand for. Claude Haiku labeled all of them; Claude, working blind in the build session, labeled 400. No person labeled any.
+`validation/real_pairs/` (the full account is in [`validation/README.md`](../validation/README.md)): 2,000 real pairs, a leftover sentence and the previous-year sentence closest to it, drawn evenly across bands of cosine by Jaccard and weighted back to the 3.8 million sentences they stand for. Claude Haiku labeled all of them; a second Claude model, shown only the two sentences, labeled 400. No person labeled any.
 
-**The judges did not agree well enough.** The plan fixed a kappa of 0.70 as good. Under the first rubric it was 0.34: Haiku called a sentence different whenever a name or a number in it had been updated. A second rubric spelling those cases out brought it to 0.60 (82% agreement on carried over or not). The disagreement that remains is a real difference of standard about edited sentences: one judge calls a sentence different when an edit changes its content at all, the other only when it adds a specific new risk. So, by the rule fixed in advance, the check below uses only the **307 pairs both judges agree on**, and each judge's own view is shown beside it.
+**The judges agree only moderately.** The bar, fixed in advance, was a kappa of 0.70. Under the first rubric it was 0.34: Haiku called a sentence different whenever a name or a number in it had been updated. A second rubric, written after seeing where the judges split and spelling those cases out, brought it to 0.60 (82% agreement on carried over or not). The disagreement that remains is a real difference of standard about edited sentences: one judge calls a sentence different when an edit changes its content at all, the other only when it adds a specific new risk. So, by the rule fixed in advance, the check below uses only the **307 pairs both judges agree on**, and each judge's own view is shown beside it.
 
-**The threshold tuned on constructed pairs failed.** At τ_p = 0.774, 69% of what the matcher called reworded was judged different (95% interval 58–78%). A constructed paraphrase is compared with one unrelated sentence. A real sentence is compared with every leftover sentence of the same company's previous filing, which is about the same business in the same words, and the best of dozens of such candidates clears 0.774 easily.
+**A threshold tuned on constructed pairs does not hold on real ones.** At τ_p = 0.774, the value the known-answer set gives, 69% of what the matcher calls reworded was judged different (95% interval 58–78%). A constructed paraphrase is compared with one unrelated sentence. A real sentence is compared with every leftover sentence of the same company's previous filing, which is about the same business in the same words, and the best of dozens of such candidates clears 0.774 easily.
 
-So τ_p was tuned again, by the same criterion (best F1), on the agreed real pairs: **τ_p = 0.847**. This departs from the plan, which tuned both thresholds on the known-answer set. The Jaccard threshold held up and was left alone.
+So τ_p is tuned on the agreed real pairs, by the same criterion (best F1): **τ_p = 0.847**. This departs from the plan, which tuned both thresholds on the known-answer set. The Jaccard threshold holds up on real pairs and stays as the known-answer set gave it.
 
 | What the matcher said | Judged same | Paraphrase | Different | Pairs | Stand for |
 |---|---|---|---|---|---|
@@ -194,17 +194,17 @@ The sample takes the same number of sentences from every year, which is why its 
 ## Limits
 
 - **No person labeled anything.** Both judges are language models from the same family, and they may share blind spots. Where they disagree, this page says so and shows both.
-- **The reworded tier rests on little.** Its threshold was set on 141 judged pairs and its precision is known only to within about 14 points either way. It is 1.6% of sentences, so no headline number here depends on it, and later milestones report their results with and without it.
+- **The reworded tier rests on little.** Its threshold was set on 141 judged pairs and its precision is known only to within about 14 points either way. It is 1.6% of sentences, so no headline number here depends on it. The later stages count a reworded sentence as carried over.
 - **Edits that change a claim count as carried over.** A sentence kept with one word reversed, or with a clause of new content added, is "near". About 5% of near matches were judged to say something different.
 - **Company names stay in the text.** A sentence that differs between two companies only by a name is not an exact match, so word-for-word sharing between companies is understated.
 - **Cut-off sentences.** Where the source text breaks a sentence at a page boundary, the pieces are matched as sentences in their own right. Judge 2 met 41 such pieces among 400 pairs.
 - **The previous filing is the only comparison.** A sentence dropped one year and restored the next is new when it returns.
 
-## What changed from the plan
+## Departures from the plan
 
-The plan is `docs/superpowers/plans/2026-11-11-m2-measurement.md`. Four things were done differently, each recorded when it was decided:
+The analysis plan, written before any result, is `docs/superpowers/plans/2026-11-11-m2-measurement.md`. Four things were done differently, each recorded when it was decided:
 
-1. **A second rubric and a second round of judging**, after the first round's kappa of 0.34 was traced to judge 1 misreading the first rubric. Both rounds are kept.
-2. **τ_p re-tuned on real pairs**, after the value from constructed pairs proved two-thirds wrong on them.
+1. **Two rubrics and two rounds of judging.** A kappa of 0.34 under the planned rubric traced to how judge 1 read it, so judge 1 labeled every pair once more under a rubric that spells out the disputed cases. Both rounds are kept in `validation/`.
+2. **τ_p is tuned on real pairs**, because the value from constructed pairs is two-thirds wrong on them.
 3. **Near-verbatim sharing between companies is reported at Jaccard 0.5 and 0.8 as well as at τ_v**, because τ_v is far too weak a test against a whole year's sentences.
 4. **The baselines use smaller samples** than planned (50,000 random pairs in place of 200,000, 500 filings against a stranger in place of 2,000, and 10,000 sentences a year for close copies between companies in place of 20,000), to keep the run to half an hour.
