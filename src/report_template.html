@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How much of a risk disclosure is boilerplate?</title>
 <meta name="description" content="%%filings%% risk sections from SEC annual reports, compared sentence by sentence with the year before: what is kept, what is new, how far the measurement can be trusted, and what makes companies rewrite.">
+<meta name="author" content="Joseph Lattanzi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How much of a risk disclosure is boilerplate?">
+<meta property="og:description" content="%%filings%% risk sections from SEC annual reports, compared sentence by sentence with the year before. %%pooled_exact%% of the sentences are last year's, word for word.">
+<meta property="og:url" content="https://jlattanzi4.github.io/sec-risk-classifier/report.html">
+<meta property="og:image" content="https://jlattanzi4.github.io/sec-risk-classifier/redline.png">
+<meta property="og:image:alt" content="One company's risk section drawn as a redline: gray lines are sentences kept from last year, blue lines are edited or new, red lines were cut.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23fff'/%3E%3Crect x='6' y='8' width='20' height='3.5' rx='1.75' fill='%23b4b9c0'/%3E%3Crect x='6' y='14.25' width='20' height='3.5' rx='1.75' fill='%23d03b3b'/%3E%3Crect x='6' y='20.5' width='13' height='3.5' rx='1.75' fill='%232a78d6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -79,6 +88,7 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .masthead a { text-decoration: none; }
 .masthead a:hover { color: var(--ink); text-decoration: underline; }
+.masthead span { display: flex; gap: 1.5rem; }
 
 h1 {
   margin: 5.5rem 0 1.5rem; max-width: 14ch;
@@ -141,17 +151,30 @@ figcaption b { font-weight: 600; color: var(--ink); }
 .s.on { stroke: var(--ink); stroke-width: 1.4; paint-order: stroke; }
 .h { fill: transparent; cursor: default; }
 
-.changes { margin-top: 1.25rem; }
-.changes ol { list-style: none; margin: 1rem 0 0; padding: 0; max-width: 40rem; }
+/* Under the pages, the same marks on real sentences: four shown, the rest a click away. */
+.changes { margin-top: 1.75rem; max-width: 40rem; }
+.changes > .note { margin: 0; }
+.changes ol { list-style: none; margin: 0.75rem 0 0; padding: 0; }
 .changes li {
   margin: 0; padding: 0.7rem 0; border-top: 1px solid var(--rule);
   font: 400 0.9375rem/1.55 var(--serif); color: var(--ink);
 }
+.examples li { font-size: 1rem; }
+.examples li:last-child { border-bottom: 1px solid var(--rule); }
 .tag {
   display: block; margin-bottom: 0.15rem;
   font: 500 0.75rem/1.4 var(--sans); color: var(--ink-2);
 }
+.tag .key { display: inline-block; margin-right: 0.45rem; vertical-align: 0.05em; }
 .was { display: block; margin-top: 0.3rem; color: var(--ink-2); }
+/* Pointing at an example finds its line among the pages. */
+.sheet:has(.s.on) .paper { stroke: var(--ink-2); }
+
+.findings { list-style: none; margin: 0; padding: 0; max-width: 40rem; }
+.findings li { margin: 0; padding: 0.85rem 0; border-top: 1px solid var(--rule); font-size: 1.0625rem; line-height: 1.5; }
+.findings li:last-child { border-bottom: 1px solid var(--rule); }
+.findings a { font-weight: 600; text-decoration-color: var(--kept); }
+.findings a:hover { text-decoration-color: currentColor; }
 
 .prose .shared { list-style: none; margin: 0 0 1.1em; padding: 0; }
 .prose .shared li { margin: 0; padding: 0.55rem 0; border-top: 1px solid var(--rule); font-size: 1.0625rem; line-height: 1.5; }
@@ -218,7 +241,7 @@ footer p { margin: 0 0 0.4rem; max-width: 40rem; }
 
 <header class="masthead">
   <a href="https://github.com/jlattanzi4">Joseph Lattanzi</a>
-  <a href="https://github.com/jlattanzi4/sec-risk-classifier">Code on GitHub</a>
+  <span><time datetime="2026-11">November 2026</time><a href="https://github.com/jlattanzi4/sec-risk-classifier">Code on GitHub</a></span>
 </header>
 
 <main>
@@ -242,13 +265,30 @@ footer p { margin: 0 0 0.4rem; max-width: 40rem; }
 %%redline_pages%%
   </div>
   <figcaption id="redline-cap"><b>%%ex_name%%'s risk section for fiscal %%ex_year%%, marked up against %%ex_prev_year%%'s.</b> Each line is a sentence, as long as the sentence is. Of %%ex_n%% sentences, %%ex_exact_n%% are last year's word for word, %%ex_near_n%% are edited, %%ex_para_n%% reworded and %%ex_new_n%% new; %%ex_removed_n%% of last year's were cut. The filing was chosen by a rule, not by eye: among fiscal %%ex_rule_year%% sections of %%ex_min%% to %%ex_max%% sentences, it is the one closest to the median filing. <a href="%%ex_url%%">The filing on EDGAR</a>, filed %%ex_filed%%.</figcaption>
-  <details class="changes">
-    <summary>Read the %%ex_changed_n%% sentences that changed</summary>
-    <ol>
-%%redline_changes%%
+  <div class="changes">
+    <p class="note">The same marks on the filing's own sentences: the first of each kind, in the order the section reads.</p>
+    <ol class="examples" id="examples">
+%%redline_examples%%
     </ol>
-  </details>
+    <details>
+      <summary>Read all %%ex_changed_n%% sentences that changed</summary>
+      <ol>
+%%redline_changes%%
+      </ol>
+    </details>
+  </div>
 </figure>
+
+<section aria-labelledby="found-h">
+  <h2 id="found-h">What the study found</h2>
+  <ul class="findings">
+    <li><a href="#made-h">%%pooled_exact%% of sentences are last year's, word for word.</a> Another %%pooled_near%% are light edits of one, and %%pooled_new%% are new.</li>
+    <li><a href="#trust-h">The labels hold up on real filings, and where they don't is known.</a> On pairs that two judges agree on, an “edited” match is right %%near_right%% of the time and a “new” call %%new_right%%; the stricter judge alone puts “edited” at %%judge_one_near%%. The blind spot: a sentence kept with its claim reversed still counts as carried over.</li>
+    <li><a href="#peers-h">Boilerplate travels between companies.</a> %%peer_full%% of full sentences are filed word for word by at least %%peer_k%% other companies in the same year. That share rose from %%peer_first%% to %%peer_last%% over the period.</li>
+    <li><a href="#lasting-h">A new sentence has a %%gone_first_year%% chance of being gone the next year.</a> Sentences shared with other companies last a median of %%median_shared%% filings, against %%median_own%% for a company's own, and %%var_within%% of the variation in rewriting is a company differing from itself year to year.</li>
+    <li><a href="#covid-h">The pandemic made companies add, not rewrite.</a> Companies that filed after it was declared added a few sentences about COVID. The change in their new text overall, %%did_new%% points (95% interval %%did_new_span%%), can't be told from zero. The larger change came a year later, with the SEC's new risk-factor rules.</li>
+  </ul>
+</section>
 
 <section aria-labelledby="made-h">
   <h2 id="made-h">What a typical section is made of</h2>
@@ -292,28 +332,28 @@ footer p { margin: 0 0 0.4rem; max-width: 40rem; }
 <section aria-labelledby="trust-h">
   <h2 id="trust-h">Can the labels be trusted?</h2>
   <div class="prose">
-    <p>No person labeled anything in this project. The labels were checked three ways instead, and the second check failed before it passed.</p>
+    <p>No person labeled anything in this project. The labels were checked three ways instead: on pairs built so the right answer is known, on real pairs read by two language-model judges, and on text where there is nothing to find.</p>
     <h3>Pairs whose answer is known</h3>
     <p>Real sentences were each given four partners: a light edit, a paraphrase, a version with its claim reversed, and an unrelated sentence. One language model wrote them and a second confirmed them. On the half held out for testing, a “carried over” call was right %%known_precision%% of the time and found %%known_recall%% of the pairs it should have.</p>
     <p>That figure leaves the reversed claims out, and they are the method's blind spot. Of %%hard_n%% sentences whose claim was reversed by changing a word or two, %%hard_called%% were called carried over. The matcher follows words. So does the embedding model behind the “reworded” label: given a sentence and the same words in random order, it calls them a match %%shuffled_clear%% of the time.</p>
     <h3>Real pairs, two judges</h3>
-    <p>How often do real filings contain such edits? %%judged_n%% pairs of real sentences were labeled by one Claude model, and %%judge_two_n%% of them again by a second that saw no scores. The two agreed poorly at first (a kappa of %%kappa_first%%, against a bar of %%kappa_bar%% set in advance), better once the instructions spelled out the cases they split on (%%kappa_second%%), and never well enough. By the rule fixed beforehand, the check uses only the %%agreed_n%% pairs both judges agree on.</p>
+    <p>How often do real filings contain such edits? %%judged_n%% pairs of real sentences were labeled by one Claude model, and %%judge_two_n%% of them again by a second that saw no scores. The two agree only moderately: a kappa of %%kappa_first%% under the first instructions and %%kappa_second%% once the instructions spelled out the cases they split on, still under the bar of %%kappa_bar%% set in advance. By the rule fixed beforehand, the check uses only the %%agreed_n%% pairs both judges agree on.</p>
   </div>
   <figure>
     <div class="chart" id="tiers-chart"></div>
-    <figcaption><b>How often each label was judged right</b>, with 95% intervals, on the pairs both judges agree on. Edits that change what a sentence says are rare in real filings: about %%near_different%% of edited matches. “Reworded” rests on %%para_pairs%% pairs and was tuned on the same pairs it is scored on; each judge alone puts it at %%judge_two_para%% and %%judge_one_para%%.</figcaption>
+    <figcaption><b>How often each label was judged right</b>, with 95% intervals, on the pairs both judges agree on. Those are the clearer cases, so read these as the favorable end: each judge alone puts “edited” at %%judge_two_near%% and %%judge_one_near%%, and “reworded” at %%judge_two_para%% and %%judge_one_para%%. “Reworded” rests on %%para_pairs%% pairs and was tuned on the same pairs it is scored on. Edits that change what a sentence says are rare in real filings: about %%near_different%% of edited matches.</figcaption>
     <details>
       <summary>Show the numbers</summary>
       <div class="scroll">%%table_tiers%%</div>
     </details>
   </figure>
   <div class="prose">
-    <h3>The threshold that failed</h3>
-    <p>The cut-off for “reworded” was first set on the constructed pairs, at a cosine of %%tau_p_first%%. On real pairs, %%first_cut_wrong%% of what it called reworded was judged to be a different sentence. A constructed paraphrase is compared with one unrelated sentence. A real sentence is compared with every unmatched sentence in last year's filing, which is about the same business in the same vocabulary, and the closest of dozens clears a low bar easily. Set again on real pairs, the cut-off is %%tau_p%%.</p>
+    <h3>Constructed pairs set the cut-off too low</h3>
+    <p>Tuned on the constructed pairs, the cut-off for “reworded” comes out at a cosine of %%tau_p_constructed%%. Real filings show that is far too low: %%constructed_cut_wrong%% of what it calls reworded was judged to be a different sentence. A constructed paraphrase is compared with one unrelated sentence. A real sentence is compared with every unmatched sentence in last year's filing, which is about the same business in the same vocabulary, and the closest of dozens clears a low bar easily. The cut-off used here is tuned on the judged real pairs instead: %%tau_p%%.</p>
   </div>
   <figure>
     <div class="chart" id="cosine-chart"></div>
-    <figcaption><b>Share of pairs the judges called carried over, by how close the embedding model scored them.</b> Pairs with no shared phrasing only. The first cut-off sat where almost nothing is carried over.</figcaption>
+    <figcaption><b>Share of pairs the judges called carried over, by how close the embedding model scored them.</b> Pairs with no shared phrasing only. The cut-off from constructed pairs sits where almost nothing is carried over.</figcaption>
     <details>
       <summary>Show the numbers</summary>
       <div class="scroll">%%table_cosine%%</div>
@@ -431,7 +471,7 @@ footer p { margin: 0 0 0.4rem; max-width: 40rem; }
     </details>
   </figure>
   <div class="prose">
-    <p><b>The larger change came a year later, and it points at the SEC.</b> Reports on fiscal %%after_year%% have %%after_new%% new sentences (%%after_prev_new%% the year before) and cut %%after_removed%% of the previous year's (%%after_prev_removed%%). Only %%after_new_covid%% of the section is new text that mentions COVID.</p>
+    <p><b>The larger change came a year later, and it points at the SEC.</b> Averaged across filings, the unit of this test, reports on fiscal %%after_year%% are %%after_new%% new sentences (%%after_prev_new%% the year before) and cut %%after_removed%% of the previous year's (%%after_prev_removed%%). Only %%after_new_covid%% of the section is new text that mentions COVID.</p>
     <p>%%after_rules_share%% of those reports were filed after the SEC's amended risk-factor rules took effect in November %%after_year%%. The rules ask for a summary when the section is long and for generic risks to be gathered under a general heading, and a summary heading appears in %%summary_heading%% of fiscal %%after_year%% sections, up from %%summary_heading_before%%. The %%rules_before_n%% reports filed before the rules cut %%rules_before_removed%% of last year's sentences; the %%rules_after_n%% filed after cut %%rules_after_removed%%. The two groups differ in other ways, so this is description and not a test.</p>
   </div>
   <figure>
@@ -440,22 +480,12 @@ footer p { margin: 0 0 0.4rem; max-width: 40rem; }
       <li><i class="key removed"></i>Cut from the previous year's</li>
     </ul>
     <div class="chart" id="after-chart"></div>
-    <figcaption><b>New and cut sentences by fiscal year</b>, and for fiscal %%after_year%% split by whether the report was filed before or after the SEC's new rules.</figcaption>
+    <figcaption><b>New and cut sentences by fiscal year</b>, and for fiscal %%after_year%% split by whether the report was filed before or after the SEC's new rules. Each figure is an average across filings, so it differs a little from the yearly chart near the top of the page, which pools every sentence.</figcaption>
     <details>
       <summary>Show the numbers</summary>
       <div class="scroll">%%table_after%%</div>
     </details>
   </figure>
-</section>
-
-<section aria-labelledby="wrong-h" class="prose">
-  <h2 id="wrong-h">What the first version got wrong</h2>
-  <p>This is the second version of the project. A review in November 2026 retracted the first version's two headline claims, and this rework replaced them.</p>
-  <ul>
-    <li><del>Filings are 51% alike in meaning but only 21% alike in wording.</del> <ins>The two scores were computed on different amounts of text and can't be compared. The embedding model read about the first half page of each section.</ins></li>
-    <li><del>A classifier sorts risks into categories with 71.2% F1.</del> <ins>Copies of test rows were also in the training set, and the labels came from keyword rules.</ins></li>
-  </ul>
-  <p>The first version is kept under the <a href="https://github.com/jlattanzi4/sec-risk-classifier/tree/v1-original"><code>v1-original</code></a> tag.</p>
 </section>
 
 <section aria-labelledby="limits-h" class="prose">
@@ -552,6 +582,12 @@ uv run python src/generate_report.py</pre>
       place(x, y);
     }
     const at = (id) => { const r = bars.get(id)[0].getBoundingClientRect(); return [r.left + r.width / 2, r.top]; };
+    /* Pointing at an example sentence under the pages marks its line among them. */
+    document.querySelectorAll("#examples li").forEach((li) => {
+      const mark = (on) => bars.get(+li.dataset.s).forEach((b) => b.classList.toggle("on", on));
+      li.addEventListener("pointerenter", () => { show(-1); mark(true); });
+      li.addEventListener("pointerleave", () => mark(false));
+    });
     root.addEventListener("pointermove", (e) => {
       const hit = e.target.closest(".h");
       if (hit) show(+hit.dataset.s, e.clientX, e.clientY); else show(-1);
@@ -740,7 +776,7 @@ uv run python src/generate_report.py</pre>
       const mid = (Math.max(r.low, lo) + r.high) / 2;
       el("text", { x: X(mid), y: f.m.top + f.ih + 19, "text-anchor": "middle" }, f.svg).textContent = i === 0 ? `under ${r.high.toFixed(2)}` : wide ? `${r.low.toFixed(2)}–${r.high.toFixed(2)}` : r.low.toFixed(2);
     });
-    for (const [v, label, anchor] of [[D.measure.tau_p_first, `First cut-off, ${D.measure.tau_p_first.toFixed(3)}`, "end"], [D.measure.tau_p, `Cut-off used, ${D.measure.tau_p.toFixed(3)}`, "start"]]) {
+    for (const [v, label, anchor] of [[D.measure.tau_p_constructed, `Tuned on constructed pairs, ${D.measure.tau_p_constructed.toFixed(3)}`, "end"], [D.measure.tau_p, `Tuned on real pairs (used), ${D.measure.tau_p.toFixed(3)}`, "start"]]) {
       el("line", { x1: X(v), x2: X(v), y1: f.m.top, y2: f.m.top + f.ih, stroke: "var(--ink)", "stroke-width": 1 }, f.svg);
       el("text", { class: "label", x: X(v) + (anchor === "end" ? -6 : 6), y: f.m.top + 10, "text-anchor": anchor }, f.svg).textContent = label;
     }

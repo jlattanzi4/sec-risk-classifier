@@ -31,6 +31,8 @@ LABELS = {
     "new": "New",
     "removed": "Removed",
 }
+# The same labels as the redline figure's legend writes them, for sentences shown under it.
+MARKS = LABELS | {"removed": "Cut from last year's"}
 MINUS = "−"
 
 # The redline figure: a page holds about 3,000 characters, as 30 lines of 100.
@@ -168,14 +170,39 @@ def sentence_html(item: dict, clip: int | None = None) -> str:
     return esc(cut(item["text"]))
 
 
+def tag(label: str) -> str:
+    """A sentence's label as the figure's legend writes it, with the legend's color key."""
+    return f'<span class="tag"><i class="key {label}"></i>{MARKS[label]}</span>'
+
+
 def changes_list(items: list[dict]) -> str:
     """Every sentence that isn't a word-for-word copy, in reading order, as a text redline."""
     rows = [
-        f'<li><span class="tag">{LABELS[item["label"]]}</span> {sentence_html(item)}</li>'
+        f"<li>{tag(item['label'])} {sentence_html(item)}</li>"
         for item in items
         if item["label"] != "exact"
     ]
     return "\n".join(rows)
+
+
+def first_of_each_kind(items: list[dict]) -> list[dict]:
+    """The first changed sentence of each label, in reading order.
+
+    The examples shown under the figure are drawn by this rule, not picked.
+    """
+    seen: dict[str, dict] = {}
+    for item in items:
+        if item["label"] != "exact":
+            seen.setdefault(item["label"], item)
+    return sorted(seen.values(), key=lambda item: item["id"])
+
+
+def examples_list(items: list[dict], clip: int = 320) -> str:
+    """The first sentence of each kind as a text redline, each tied to its line in the figure."""
+    return "\n".join(
+        f'<li data-s="{item["id"]}">{tag(item["label"])} {sentence_html(item, clip=clip)}</li>'
+        for item in first_of_each_kind(items)
+    )
 
 
 def table(head: list[str], rows: list[list[str]], numeric_from: int = 1) -> str:
@@ -225,6 +252,7 @@ def example_parts(example: dict) -> tuple[dict, dict]:
             page_svg(number + 1, segments, items) for number, segments in enumerate(pages)
         ),
         "redline_changes": changes_list(items),
+        "redline_examples": examples_list(items),
     }
     data = {
         "name": name,
@@ -248,7 +276,7 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
 
     real = thresholds["real_pairs"]
     makeup, intervals = real["makeup"], real["intervals"]
-    first_cut = real["at_known_answer_tau_p"]
+    constructed_cut = real["at_known_answer_tau_p"]
     known = thresholds["known_answer"]
     hard = known["labeled"]["different_hard"]
     carried = known["carried_over"]
@@ -302,7 +330,7 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
         "before_last_new": pct(years[-2]["pooled"]["new"]),
         "tau_v_percent": pct(measure["tau_v"]),
         "tau_p": f"{measure['tau_p']:.3f}",
-        "tau_p_first": f"{thresholds['tau_p_known_answer']:.3f}",
+        "tau_p_constructed": f"{thresholds['tau_p_known_answer']:.3f}",
         "known_precision": pct(carried["precision_without_hard"]["value"]),
         "known_recall": pct(carried["recall"]["value"]),
         "hard_called": count(hard["near"] + hard["paraphrase"]),
@@ -313,7 +341,7 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
         "judged_n": count(judge_one["n_pairs"] + judge_two["n_pairs"]),
         "judge_two_n": count(judge_two["n_pairs"]),
         "agreed_n": count(real["n"]),
-        "first_cut_wrong": pct(first_cut["makeup"]["paraphrase"]["different"], 0),
+        "constructed_cut_wrong": pct(constructed_cut["makeup"]["paraphrase"]["different"], 0),
         "near_right": pct(tiers[0][2]),
         "near_right_span": span(*tiers[0][3]),
         "para_right": pct(tiers[1][2]),
@@ -321,6 +349,8 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
         "para_pairs": count(makeup["paraphrase"]["n"]),
         "new_right": pct(tiers[2][2]),
         "judge_two_para": pct(1 - judge_two["paraphrase"]["different"]),
+        "judge_two_near": pct(1 - judge_two["near"]["different"]),
+        "judge_one_near": pct(1 - judge_one["near"]["different"]),
         "judge_one_para": pct(1 - judge_one["paraphrase"]["different"]),
         "near_different": pct(makeup["near"]["different"], 0),
         "shuffled_clear": pct(shuffled["share_cosine_at_or_above_tau_p"]),
@@ -440,7 +470,7 @@ def measure_parts(measure: dict) -> tuple[dict, dict]:
             for band in real["by_cosine"]
         ],
         "tau_p": measure["tau_p"],
-        "tau_p_first": thresholds["tau_p_known_answer"],
+        "tau_p_constructed": thresholds["tau_p_known_answer"],
         "stranger": [
             {"name": name} | {s: stranger[key][s] for s in ("exact", "near", "paraphrase", "new")}
             for name, key in (

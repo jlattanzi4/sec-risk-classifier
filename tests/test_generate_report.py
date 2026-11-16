@@ -10,10 +10,12 @@ from src.generate_report import (
     PAGE_LINES,
     README,
     README_TEMPLATE,
+    ROOT,
     TEMPLATE,
     build,
     build_readme,
     explain_parts,
+    first_of_each_kind,
     lay_out,
     reading_order,
     word_diff,
@@ -120,8 +122,36 @@ def test_every_chart_has_a_table_of_its_numbers(page):
 
 
 def test_the_page_has_a_section_for_each_layer_of_the_study(page):
-    for heading in ("made-h", "trust-h", "peers-h", "lasting-h", "covid-h", "wrong-h", "limits-h"):
+    for heading in ("found-h", "made-h", "trust-h", "peers-h", "lasting-h", "covid-h", "limits-h"):
         assert f'id="{heading}"' in page
+
+
+def test_each_finding_in_the_summary_links_to_a_section_on_the_page(page):
+    summary = re.search(r'<ul class="findings">.*?</ul>', page, flags=re.DOTALL).group(0)
+    targets = re.findall(r'href="#([\w-]+)"', summary)
+    assert len(targets) == summary.count("<li>") >= 5
+    for target in targets:
+        assert f'id="{target}"' in page
+
+
+def test_the_examples_under_the_figure_are_the_first_sentence_of_each_kind(report):
+    items = reading_order(report["example"])
+    chosen = first_of_each_kind(items)
+    assert [item["id"] for item in chosen] == sorted(item["id"] for item in chosen)
+    assert {item["label"] for item in chosen} == {
+        item["label"] for item in items if item["label"] != "exact"
+    }
+    for item in chosen:
+        earlier = [other for other in items[: item["id"]] if other["label"] == item["label"]]
+        assert earlier == []
+
+
+def test_each_example_points_at_a_line_drawn_in_the_figure(report, page):
+    listed = re.search(r'<ol class="examples".*?</ol>', page, flags=re.DOTALL).group(0)
+    ids = re.findall(r'<li data-s="(\d+)">', listed)
+    assert len(ids) == len(first_of_each_kind(reading_order(report["example"]))) >= 2
+    for sid in ids:
+        assert f'data-s="{sid}" x=' in page
 
 
 # Digits the template may hold: names and public dates, never a result. Everything else on the
@@ -132,10 +162,6 @@ TYPED = [
     "95% interval",
     "11 March",
     "November 2026",
-    "51% alike",
-    "21% alike",
-    "71.2% F1",
-    "v1-original",
     "jlattanzi4",
     "h1",
     "h2",
@@ -185,20 +211,10 @@ README_TYPED = [
     "95% interval",
     "3.12",
     "M3",
-    "v1-original",
     "jlattanzi4",
-    "issues/1",
-    "issues/2",
     "two hours",
-    "51%",
-    "21%",
-    "71.2%",
     "test-2020",
     "test2020",
-    "November 2026",
-    "[#2]",
-    "[#1]",
-    "F1",
 ]
 
 
@@ -247,3 +263,32 @@ def test_a_sentence_the_data_no_longer_supports_stops_the_build(report, template
     change(changed)
     with pytest.raises(ValueError, match="the page says"):
         build(changed, template)
+
+
+# The write-ups describe the study as it stands. They don't narrate drafts, name an earlier
+# version of the project, or number the work by the order it was built in.
+STANDALONE = [
+    ROOT / "README.md",
+    ROOT / "src" / "readme_template.md",
+    ROOT / "src" / "report_template.html",
+    ROOT / "docs" / "report.html",
+    ROOT / "docs" / "data-foundation.md",
+    ROOT / "docs" / "measurement.md",
+    ROOT / "docs" / "explain.md",
+    ROOT / "docs" / "test-2020.md",
+    ROOT / "validation" / "README.md",
+]
+HISTORY = re.compile(
+    r"first version|second version|earlier version|v1-original|rework|retract|milestone \d"
+    r"|under review|first attempt|tuned again|re-tuned",
+    flags=re.IGNORECASE,
+)
+
+
+@pytest.mark.parametrize("path", STANDALONE, ids=lambda path: path.name)
+def test_a_write_up_reads_as_the_study_itself_not_as_a_revision_of_one(path):
+    text = path.read_text()
+    if path.suffix == ".html":
+        # The filing's own sentences and the chart data are quoted, not written here.
+        text = re.sub(r"<(script|ol|svg)\b.*?</\1>", "", text, flags=re.DOTALL)
+    assert HISTORY.findall(text) == []
